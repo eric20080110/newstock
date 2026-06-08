@@ -1,0 +1,74 @@
+import { useEffect, useState } from 'react'
+import { fetchAllocation, type TargetAllocation } from '../api/client'
+import AllocationChart from '../components/AllocationChart'
+import { Card, CardContent, CardHeader } from '../components/ui/card'
+
+export default function Dashboard() {
+  const [data, setData] = useState<TargetAllocation | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetchAllocation()
+      .then(setData)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return <div className="text-center py-12 text-gray-400">載入中…</div>
+  if (error) return <div className="text-center py-12 text-red-500">{error}</div>
+  if (!data) return null
+
+  const scoreLabel =
+    data.total_score >= 80 ? '極度貪婪' :
+    data.total_score >= 60 ? '貪婪' :
+    data.total_score >= 40 ? '中性' :
+    data.total_score >= 20 ? '恐懼' : '極度恐懼'
+
+  const scoreColor =
+    data.total_score >= 80 ? 'text-green-600' :
+    data.total_score >= 60 ? 'text-lime-600' :
+    data.total_score >= 40 ? 'text-yellow-600' :
+    data.total_score >= 20 ? 'text-orange-600' : 'text-red-600'
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      <Card>
+        <CardHeader>蒙格市場溫度計</CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-4xl font-bold">{data.total_score}</span>
+              <span className="text-gray-400 ml-2">/ 100</span>
+            </div>
+            <div className={`text-2xl font-bold ${scoreColor}`}>{scoreLabel}</div>
+          </div>
+          <div className="mt-3 h-3 rounded-full bg-gray-100 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${data.total_score}%`,
+                background: 'linear-gradient(to right, #ef4444, #f59e0b, #22c55e)',
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>蒙格目標配置</CardHeader>
+        <CardContent>
+          <AllocationChart data={data.target} />
+          <div className="grid grid-cols-3 gap-2 mt-4 text-sm">
+            {Object.entries(data.target).map(([key, val]) => (
+              <div key={key} className="flex justify-between px-2 py-1 bg-gray-50 rounded">
+                <span className="text-gray-500">{key}</span>
+                <span className="font-medium">{val.toFixed(1)}%</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
