@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store/authStore'
 
-const _base = import.meta.env.VITE_API_URL || '/api'
-const BASE = _base.replace(/\/+$/, '')
+const _base = import.meta.env.VITE_API_URL || ''
+const BASE = _base.replace(/\/+$/, '') + '/api'
 
 export interface AssetAllocation {
   taiwan_etf: number
