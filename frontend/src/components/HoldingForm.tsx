@@ -115,15 +115,23 @@ export default function HoldingForm({
           <div key={key}>
             <div className="flex items-center gap-3">
               <label className="w-40 text-sm font-medium text-gray-700 truncate" title={label}>{label}</label>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={0.5}
-                value={pct}
-                onChange={(e) => handleSlider(key, parseFloat(e.target.value))}
-                className="flex-1 accent-blue-600"
-              />
+              <div className="relative flex-1 h-6">
+                <div className="absolute inset-0 top-1/2 -translate-y-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                </div>
+                {refPct !== undefined && (
+                  <div className="absolute top-0 w-0.5 bg-red-400 rounded-full" style={{ left: `${refPct}%`, height: '100%', transform: 'translateX(-50%)' }} />
+                )}
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  value={pct}
+                  onChange={(e) => handleSlider(key, parseFloat(e.target.value))}
+                  className="absolute inset-0 w-full cursor-pointer opacity-0 z-10"
+                />
+              </div>
               <div className="w-14 text-right text-sm font-medium tabular-nums">{pct.toFixed(1)}%</div>
               {onTotalAmountChange && (
                 <>
