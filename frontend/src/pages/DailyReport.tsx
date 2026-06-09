@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { BASE, type DailyReportType, type AssetAllocation } from '../api/client'
 import AllocationChart from '../components/AllocationChart'
+import Spinner from '../components/Spinner'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
 
 export default function DailyReport() {
   const printRef = useRef<HTMLDivElement>(null)
   const [report, setReport] = useState<DailyReportType | null>(null)
   const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
 
   const fetchReport = (force = false) => {
     setLoading(true)
+    setGenerating(force)
     setError('')
     const ctrl = new AbortController()
     fetch(`${BASE}/daily-report/today${force ? '?force=true' : ''}`, { signal: ctrl.signal })
@@ -23,13 +26,13 @@ export default function DailyReport() {
       })
       .then(setReport)
       .catch((e) => { if (e.name !== 'AbortError') setError(e.message) })
-      .finally(() => setLoading(false))
+      .finally(() => { setLoading(false); setGenerating(false) })
     return () => ctrl.abort()
   }
 
   useEffect(() => fetchReport(), [])
 
-  if (loading) return <div className="text-center py-12 text-gray-400">產生報告中…</div>
+  if (loading) return <Spinner text={generating ? '正在產生每日報告…' : '載入中…'} />
   if (error) return (
     <div className="text-center py-12 text-red-500">
       <p>{error}</p>
@@ -53,7 +56,9 @@ export default function DailyReport() {
   return (
     <div className="max-w-4xl mx-auto space-y-6" ref={printRef}>
       <div className="flex items-center justify-end gap-2 print:hidden">
-        <button onClick={() => fetchReport(true)} className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700">重新產生</button>
+        <button onClick={() => fetchReport(true)} disabled={loading} className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50">
+          {generating ? '產生中…' : '重新產生'}
+        </button>
         <button onClick={() => window.print()} className="rounded-lg bg-gray-600 px-3 py-1 text-xs text-white hover:bg-gray-700">📄 匯出 PDF</button>
       </div>
       <Card>

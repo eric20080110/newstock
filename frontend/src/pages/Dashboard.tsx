@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { BASE, type TargetAllocation, type DailyReportType } from '../api/client'
 import AllocationChart from '../components/AllocationChart'
 import HistoryChart from '../components/HistoryChart'
+import Spinner from '../components/Spinner'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
 
 export default function Dashboard() {
@@ -26,7 +27,7 @@ export default function Dashboard() {
     return () => ctrl.abort()
   }, [])
 
-  if (loading) return <div className="text-center py-12 text-gray-400">載入中…</div>
+  if (loading) return <Spinner />
   if (error) return <div className="text-center py-12 text-red-500">{error}</div>
   if (!data) return null
 
