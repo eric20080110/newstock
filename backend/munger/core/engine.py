@@ -25,7 +25,7 @@ class AssetAllocation:
     cash: float = 0.0
 
 
-def _score_cape(cape: float) -> float:
+def _score_cape(cape: float | None) -> float:
     if cape is None:
         return 50.0
     if cape <= 15:
@@ -46,7 +46,7 @@ def _score_yield_curve(y2: float, y10: float) -> float:
     return 50.0 + (spread - 0.25) * (45.0 / 1.25)
 
 
-def _score_vix(vix: float) -> float:
+def _score_vix(vix: float | None) -> float:
     if vix is None:
         return 50.0
     if vix <= 12:

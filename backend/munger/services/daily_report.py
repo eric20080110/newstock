@@ -33,7 +33,7 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
         vix=data["vix"],
         gold_return_6m=data["gold_return_6m"],
         oil_return_6m=data["oil_return_6m"],
-        news_score=sentiment["overall_score"],
+        news_score=sentiment.get("overall_score", 50.0),
     )
     target = compute_allocation(md)
     total = compute_total_score(md)
@@ -42,7 +42,7 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
     model_used = sentiment.get("model_used")
 
     if existing:
-        existing.news_score = sentiment["overall_score"]
+        existing.news_score = sentiment.get("overall_score", 50.0)
         existing.cape_score = _score_cape(data.get("cape"))
         existing.yield_curve_score = _score_yield_curve(data.get("treasury_2y"), data.get("treasury_10y"))
         existing.vix_score = _score_vix(data.get("vix"))
@@ -59,7 +59,7 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
 
     report = DailyReport(
         date=today,
-        news_score=sentiment["overall_score"],
+        news_score=sentiment.get("overall_score", 50.0),
         cape_score=_score_cape(data.get("cape")),
         yield_curve_score=_score_yield_curve(data.get("treasury_2y"), data.get("treasury_10y")),
         vix_score=_score_vix(data.get("vix")),
@@ -88,9 +88,3 @@ def get_report_history(db: Session, limit: int = 30) -> list[DailyReport]:
         .limit(limit)
         .all()
     )
-
-
-def _safe_score(val: float | None) -> float:
-    if val is None:
-        return 50.0
-    return float(val)

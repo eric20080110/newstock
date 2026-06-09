@@ -40,6 +40,7 @@ export default function HistoryChart() {
           <Line type="monotone" dataKey="news_score" name="新聞" stroke="#3b82f6" strokeWidth={1} dot={false} />
           <Line type="monotone" dataKey="cape_score" name="CAPE" stroke="#10b981" strokeWidth={1} dot={false} />
           <Line type="monotone" dataKey="vix_score" name="VIX" stroke="#ef4444" strokeWidth={1} dot={false} />
+          <Line type="monotone" dataKey="yield_curve_score" name="殖利率曲線" stroke="#f59e0b" strokeWidth={1} dot={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>
