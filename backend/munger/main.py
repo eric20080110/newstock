@@ -1,20 +1,13 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import Response
 
 from munger.api.router import router
 from munger.core.config import settings
 
 
-CORS_HEADERS = [
-    (b"access-control-allow-origin", b"*"),
-    (b"access-control-allow-headers", b"*"),
-    (b"access-control-allow-methods", b"*"),
-]
-
-
-class RawCORSMiddleware:
+class CORSMiddleware:
     def __init__(self, app):
         self.app = app
 
@@ -23,12 +16,31 @@ class RawCORSMiddleware:
             await self.app(scope, receive, send)
             return
 
+        if scope["method"] == "OPTIONS":
+            await send({
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [
+                    (b"access-control-allow-origin", b"*"),
+                    (b"access-control-allow-methods", b"*"),
+                    (b"access-control-allow-headers", b"*"),
+                    (b"access-control-max-age", b"86400"),
+                    (b"content-length", b"0"),
+                ],
+            })
+            await send({
+                "type": "http.response.body",
+                "body": b"",
+            })
+            return
+
         async def send_with_cors(message):
             if message["type"] == "http.response.start":
                 existing = dict(message.get("headers", []))
-                for k, v in CORS_HEADERS:
-                    if k not in existing:
-                        message["headers"] = list(message.get("headers", [])) + [(k, v)]
+                if b"access-control-allow-origin" not in existing:
+                    message["headers"] = list(message.get("headers", [])) + [
+                        (b"access-control-allow-origin", b"*"),
+                    ]
             await send(message)
 
         await self.app(scope, receive, send_with_cors)
@@ -45,19 +57,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Munger Portfolio", version="0.1.0", lifespan=lifespan)
-app.add_middleware(RawCORSMiddleware)
-
-origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
-allow_creds = origins != ["*"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=allow_creds,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+app.add_middleware(CORSMiddleware)
 app.include_router(router)
 
 
