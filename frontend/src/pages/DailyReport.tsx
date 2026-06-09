@@ -9,11 +9,11 @@ export default function DailyReport() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const fetchReport = () => {
+  const fetchReport = (force = false) => {
     setLoading(true)
     setError('')
     const ctrl = new AbortController()
-    fetch(`${BASE}/daily-report/today`, { signal: ctrl.signal })
+    fetch(`${BASE}/daily-report/today${force ? '?force=true' : ''}`, { signal: ctrl.signal })
       .then(async (r) => {
         if (!r.ok) {
           const body = await r.text().catch(() => '')
@@ -27,13 +27,13 @@ export default function DailyReport() {
     return () => ctrl.abort()
   }
 
-  useEffect(fetchReport, [])
+  useEffect(() => fetchReport(), [])
 
   if (loading) return <div className="text-center py-12 text-gray-400">產生報告中…</div>
   if (error) return (
     <div className="text-center py-12 text-red-500">
       <p>{error}</p>
-      <button onClick={fetchReport} className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">重試</button>
+      <button onClick={() => fetchReport(true)} className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">重試</button>
     </div>
   )
   if (!report) return null
@@ -53,7 +53,7 @@ export default function DailyReport() {
   return (
     <div className="max-w-4xl mx-auto space-y-6" ref={printRef}>
       <div className="flex items-center justify-end gap-2 print:hidden">
-        <button onClick={fetchReport} className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700">重新產生</button>
+        <button onClick={() => fetchReport(true)} className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700">重新產生</button>
         <button onClick={() => window.print()} className="rounded-lg bg-gray-600 px-3 py-1 text-xs text-white hover:bg-gray-700">📄 匯出 PDF</button>
       </div>
       <Card>

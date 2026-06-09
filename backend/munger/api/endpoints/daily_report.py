@@ -58,9 +58,9 @@ def get_report(db: Session = Depends(get_db)):
 
 
 @router.get("/daily-report/today", response_model=DailyReportOut)
-def get_or_generate_today(db: Session = Depends(get_db)):
+def get_or_generate_today(force: bool = Query(False), db: Session = Depends(get_db)):
     try:
-        return generate_daily_report(db, force=True)
+        return generate_daily_report(db, force=force)
     except Exception:
         return _compute_report_dict()
 
