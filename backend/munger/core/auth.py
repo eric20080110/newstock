@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWKClient
 
-from app.core.config import settings
+from munger.core.config import settings
 
 _scheme = HTTPBearer(auto_error=False)
 _jwks_client: Optional[PyJWKClient] = None

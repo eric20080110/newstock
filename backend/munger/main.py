@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.router import router
-from app.core.config import settings
+from munger.api.router import router
+from munger.core.config import settings
 
 
 @asynccontextmanager

@@ -1,4 +1,4 @@
-from app.schemas.portfolio import AdjustmentStep, AssetAllocationOut, CurrentHoldingsIn, TransitionSuggestionOut
+from munger.schemas.portfolio import AdjustmentStep, AssetAllocationOut, CurrentHoldingsIn, TransitionSuggestionOut
 
 SPEED_LIMITS = {
     "conservative": 0.02,

@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from app.core.config import settings
+from munger.core.config import settings
 
 
 @lru_cache(maxsize=1)

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.core.auth import get_current_user
-from app.core.database import get_db
-from app.models.portfolio import Holding, Portfolio, UserProfile
-from app.schemas.portfolio import PortfolioIn, PortfolioOut
+from munger.core.auth import get_current_user
+from munger.core.database import get_db
+from munger.models.portfolio import Holding, Portfolio, UserProfile
+from munger.schemas.portfolio import PortfolioIn, PortfolioOut
 
 router = APIRouter()
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import allocation, portfolio, suggestion
+from munger.api.endpoints import allocation, portfolio, suggestion
 
 router = APIRouter()
 router.include_router(allocation.router, prefix="/api", tags=["allocation"])

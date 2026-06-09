@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 
-from app.core.auth import get_optional_user
-from app.core.data_fetcher import fetch_all_market_data
-from app.core.engine import MarketData, compute_allocation, compute_total_score
-from app.schemas.portfolio import AssetAllocationOut, TargetAllocationOut
+from munger.core.auth import get_optional_user
+from munger.core.data_fetcher import fetch_all_market_data
+from munger.core.engine import MarketData, compute_allocation, compute_total_score
+from munger.schemas.portfolio import AssetAllocationOut, TargetAllocationOut
 
 router = APIRouter()
 

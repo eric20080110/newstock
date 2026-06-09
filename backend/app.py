@@ -4,7 +4,7 @@ import traceback as tb
 _import_error = None
 
 try:
-    from app.main import app
+    from munger.main import app
 except Exception:
     _import_error = tb.format_exc()
     tb.print_exc(file=sys.stderr)

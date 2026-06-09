@@ -5,7 +5,7 @@ from sqlalchemy import Column, DateTime, Float, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.core.database import Base
+from munger.core.database import Base
 
 
 class UserProfile(Base):

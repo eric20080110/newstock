@@ -3,7 +3,7 @@ from functools import lru_cache
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-from app.core.config import settings
+from munger.core.config import settings
 
 
 @lru_cache(maxsize=1)

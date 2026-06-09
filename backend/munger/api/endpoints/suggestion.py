@@ -3,13 +3,13 @@ import json
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.core.auth import get_current_user
-from app.core.database import get_db
-from app.core.data_fetcher import fetch_all_market_data
-from app.core.engine import MarketData, compute_allocation
-from app.models.portfolio import Suggestion, UserProfile
-from app.schemas.portfolio import CurrentHoldingsIn, TransitionSuggestionOut
-from app.services.transition import compute_transition
+from munger.core.auth import get_current_user
+from munger.core.database import get_db
+from munger.core.data_fetcher import fetch_all_market_data
+from munger.core.engine import MarketData, compute_allocation
+from munger.models.portfolio import Suggestion, UserProfile
+from munger.schemas.portfolio import CurrentHoldingsIn, TransitionSuggestionOut
+from munger.services.transition import compute_transition
 
 router = APIRouter()
 
