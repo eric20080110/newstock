@@ -43,7 +43,7 @@ def _compute_report_dict():
         "headline": sentiment.get("headline", ""),
         "key_concerns": sentiment.get("key_concerns", []),
         "key_positives": sentiment.get("key_positives", []),
-        "gemini_limited": sentiment.get("gemini_limited", False),
+        "gemini_status": sentiment.get("gemini_status", "error"),
         "created_at": datetime.utcnow(),
     }
 

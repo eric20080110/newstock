@@ -59,9 +59,13 @@ export default function DailyReport() {
           </div>
         </CardHeader>
         <CardContent>
-          {report.gemini_limited && (
+          {report.gemini_status !== "ok" && (
             <div className="mb-3 rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2 text-sm text-yellow-700">
-              ⚠️ Gemini API 用量已達上限，新聞情緒分數使用預設值（50）。將於下次排程自動恢復。
+              {report.gemini_status === "no_key"
+                ? "⚠️ 尚未設定 Gemini API Key，新聞情緒分數使用預設值（50）。請在後端環境變數設定 GEMINI_API_KEY。"
+                : report.gemini_status === "quota"
+                ? "⚠️ Gemini API 用量已達上限，新聞情緒分數使用預設值（50）。將於下次排程自動恢復。"
+                : "⚠️ Gemini API 發生錯誤，新聞情緒分數使用預設值（50）。"}
             </div>
           )}
           {report.headline && (

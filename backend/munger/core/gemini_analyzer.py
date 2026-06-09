@@ -18,7 +18,7 @@ def analyze_news_sentiment(articles: list[dict]) -> dict:
     api_key = settings.gemini_api_key
     if not api_key:
         logger.warning("GEMINI_API_KEY not configured")
-        return {"overall_score": 50.0, "headline": "", "key_concerns": [], "key_positives": [], "gemini_limited": True}
+        return {"overall_score": 50.0, "headline": "", "key_concerns": [], "key_positives": [], "gemini_status": "no_key"}
 
     news_text = "\n\n".join(
         f"Title: {a['title']}\nSummary: {a.get('description', '')}"
@@ -68,7 +68,7 @@ Today's news:
             "headline": result.get("headline", ""),
             "key_concerns": result.get("key_concerns", []),
             "key_positives": result.get("key_positives", []),
-            "gemini_limited": False,
+            "gemini_status": "ok",
         }
     except Exception as e:
         err = str(e)
@@ -80,5 +80,5 @@ Today's news:
             "headline": "",
             "key_concerns": [],
             "key_positives": [],
-            "gemini_limited": is_quota,
+            "gemini_status": "quota" if is_quota else "error",
         }

@@ -32,7 +32,7 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
     target = compute_allocation(md)
     total = compute_total_score(md)
 
-    gemini_limited = sentiment.get("gemini_limited", False)
+    gemini_status = sentiment.get("gemini_status", "error")
 
     if existing:
         existing.news_score = sentiment["overall_score"]
@@ -44,7 +44,7 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
         existing.headline = sentiment.get("headline")
         existing.key_concerns = sentiment.get("key_concerns")
         existing.key_positives = sentiment.get("key_positives")
-        existing.gemini_limited = gemini_limited
+        existing.gemini_status = gemini_status
         db.commit()
         db.refresh(existing)
         return existing
@@ -60,7 +60,7 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
         headline=sentiment.get("headline"),
         key_concerns=sentiment.get("key_concerns"),
         key_positives=sentiment.get("key_positives"),
-        gemini_limited=gemini_limited,
+        gemini_status=gemini_status,
     )
     db.add(report)
     db.commit()

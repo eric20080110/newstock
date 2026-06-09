@@ -90,7 +90,7 @@ class DailyReportOut(BaseModel):
     headline: str | None
     key_concerns: list[str] | None
     key_positives: list[str] | None
-    gemini_limited: bool = False
+    gemini_status: str = "ok"
     created_at: datetime
 
     class Config:

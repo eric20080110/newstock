@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, JSON, String, Text
+from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, JSON, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -22,7 +22,7 @@ class DailyReport(Base):
     headline = Column(Text, nullable=True)
     key_concerns = Column(JSON, nullable=True)
     key_positives = Column(JSON, nullable=True)
-    gemini_limited = Column(Boolean, default=False, server_default="false")
+    gemini_status = Column(String(20), default="ok", server_default="ok")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
