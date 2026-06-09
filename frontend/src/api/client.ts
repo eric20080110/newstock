@@ -123,9 +123,11 @@ export async function fetchTransition(
 ): Promise<TransitionSuggestion> {
   const res = await _fetch(`${BASE}/suggestion/transition?speed=${speed}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(current),
   })
-  if (!res.ok) throw new Error('無法取得轉換建議')
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`無法取得轉換建議 (${res.status}${text ? ': ' + text.slice(0, 100) : ''})`)
+  }
   return res.json()
 }

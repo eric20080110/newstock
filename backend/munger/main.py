@@ -7,6 +7,33 @@ from munger.api.router import router
 from munger.core.config import settings
 
 
+CORS_HEADERS = [
+    (b"access-control-allow-origin", b"*"),
+    (b"access-control-allow-headers", b"*"),
+    (b"access-control-allow-methods", b"*"),
+]
+
+
+class RawCORSMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_cors(message):
+            if message["type"] == "http.response.start":
+                existing = dict(message.get("headers", []))
+                for k, v in CORS_HEADERS:
+                    if k not in existing:
+                        message["headers"] = list(message.get("headers", [])) + [(k, v)]
+            await send(message)
+
+        await self.app(scope, receive, send_with_cors)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if settings.env != "development":
@@ -18,6 +45,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Munger Portfolio", version="0.1.0", lifespan=lifespan)
+app.add_middleware(RawCORSMiddleware)
 
 origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
 allow_creds = origins != ["*"]
@@ -31,14 +59,6 @@ app.add_middleware(
 )
 
 app.include_router(router)
-
-
-from starlette.responses import Response
-
-
-@app.options("/{path:path}")
-async def catch_all_options():
-    return Response(status_code=200)
 
 
 @app.get("/health")
