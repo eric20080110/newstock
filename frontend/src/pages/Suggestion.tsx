@@ -34,6 +34,7 @@ export default function Suggestion() {
   const [error, setError] = useState('')
   const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([])
   const [snapName, setSnapName] = useState('')
+  const [snapshotKey, setSnapshotKey] = useState(0)
   const reportFetched = useRef(false)
 
   useEffect(() => {
@@ -67,10 +68,17 @@ export default function Suggestion() {
 
   const handleSave = async () => {
     if (!snapName.trim()) return
+    if (!isSignedIn) {
+      setError('請先登入後才能儲存持倉')
+      return
+    }
+    setError('')
     const snap = await createSnapshot(snapName.trim(), holdings)
     if (snap) {
       setSnapshots((prev) => [snap, ...prev])
       setSnapName('')
+    } else {
+      setError('儲存失敗，請確認已登入')
     }
   }
 
@@ -85,7 +93,7 @@ export default function Suggestion() {
       <Card>
         <CardHeader>輸入目前持倉</CardHeader>
         <CardContent>
-          <HoldingForm values={holdings} onChange={setHoldings} reference={reference ?? undefined} totalAmount={totalAmount} onTotalAmountChange={setTotalAmount} />
+          <HoldingForm key={snapshotKey} values={holdings} onChange={setHoldings} reference={reference ?? undefined} totalAmount={totalAmount} onTotalAmountChange={setTotalAmount} />
           <div className="mt-4 flex items-center gap-4">
             <label className="text-sm font-medium">調整速度：</label>
             <select
@@ -117,15 +125,17 @@ export default function Suggestion() {
               />
               <button onClick={handleSave} disabled={!snapName.trim()} className="rounded-lg bg-green-600 px-3 py-1.5 text-xs text-white hover:bg-green-700 disabled:opacity-50">儲存</button>
             </div>
-            {snapshots.length > 0 && (
+            {snapshots.length > 0 ? (
               <div className="mt-3 space-y-1">
                 {snapshots.map((s) => (
                   <div key={s.id} className="flex items-center gap-2 rounded bg-gray-50 px-3 py-1.5 text-sm">
-                    <button onClick={() => setHoldings(s.holdings)} className="flex-1 text-left hover:text-blue-600">{s.name}</button>
+                    <button onClick={() => { setHoldings(s.holdings); setSnapshotKey(k => k + 1) }} className="flex-1 text-left hover:text-blue-600">{s.name}</button>
                     <button onClick={() => handleDelete(s.id)} className="text-red-500 hover:text-red-700 text-xs">刪除</button>
                   </div>
                 ))}
               </div>
+            ) : (
+              <p className="mt-3 text-xs text-gray-400">尚未儲存任何持倉</p>
             )}
           </div>
         </CardContent>
