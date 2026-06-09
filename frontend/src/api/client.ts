@@ -77,7 +77,10 @@ async function _fetch(url: string, options: RequestInit = {}): Promise<Response>
   if (options.body && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json'
   }
-  return fetch(url, { ...options, headers })
+  const res = await fetch(url, { ...options, headers }).catch((e) => {
+    throw new Error(`網路請求失敗: ${e.message}`)
+  })
+  return res
 }
 
 export async function fetchAllocation(): Promise<TargetAllocation> {

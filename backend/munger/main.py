@@ -33,6 +33,14 @@ app.add_middleware(
 app.include_router(router)
 
 
+from starlette.responses import Response
+
+
+@app.options("/{path:path}")
+async def catch_all_options():
+    return Response(status_code=200)
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}

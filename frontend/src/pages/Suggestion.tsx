@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '@clerk/clerk-react'
 import { fetchTransition, fetchSnapshots, createSnapshot, deleteSnapshot, type CurrentHoldings, type TransitionSuggestion, type SnapshotInfo } from '../api/client'
 import HoldingForm from '../components/HoldingForm'
 import AllocationChart from '../components/AllocationChart'
@@ -23,6 +24,7 @@ const SPEEDS = [
 ]
 
 export default function Suggestion() {
+  const { isSignedIn } = useAuth()
   const [holdings, setHoldings] = useState<Record<string, number>>(defaultHoldings)
   const [speed, setSpeed] = useState('standard')
   const [result, setResult] = useState<TransitionSuggestion | null>(null)
@@ -36,13 +38,18 @@ export default function Suggestion() {
   }, [])
 
   const handleSubmit = async () => {
+    if (!isSignedIn) {
+      setError('請先登入後再使用持倉調整功能')
+      return
+    }
     setLoading(true)
     setError('')
     try {
       const res = await fetchTransition(holdings as unknown as CurrentHoldings, speed)
       setResult(res)
     } catch (e: any) {
-      setError(e.message)
+      setError(e.message || '網路錯誤，請確認後端服務正常')
+      console.error('Suggestion error:', e)
     } finally {
       setLoading(false)
     }
