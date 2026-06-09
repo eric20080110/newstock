@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+psycopg2-binary
+pydantic-settings
+httpx
+pyjwt
+cryptography
+yfinance
+fredapi
+apscheduler
+mangum
