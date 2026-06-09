@@ -13,7 +13,13 @@ export default function DailyReport() {
     setError('')
     const ctrl = new AbortController()
     fetch(`${BASE}/daily-report/today`, { signal: ctrl.signal })
-      .then((r) => { if (!r.ok) throw new Error('無法取得每日報告'); return r.json() })
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.text().catch(() => '')
+          throw new Error(`無法取得每日報告 (${r.status}${body ? ': ' + body.slice(0, 100) : ''})`)
+        }
+        return r.json()
+      })
       .then(setReport)
       .catch((e) => { if (e.name !== 'AbortError') setError(e.message) })
       .finally(() => setLoading(false))
