@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@clerk/clerk-react'
-import { BASE, fetchTransition, fetchSnapshots, createSnapshot, deleteSnapshot, type CurrentHoldings, type TransitionSuggestion, type SnapshotInfo } from '../api/client'
+import { BASE, fetchTransition, fetchSnapshots, deleteSnapshot, type CurrentHoldings, type TransitionSuggestion, type SnapshotInfo } from '../api/client'
+import { useAuthStore } from '../store/authStore'
 import HoldingForm from '../components/HoldingForm'
 import AllocationChart from '../components/AllocationChart'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
@@ -65,12 +66,22 @@ export default function Suggestion() {
   const handleSave = async () => {
     if (!isSignedIn || !saveName.trim()) return
     const snapData = { ...holdings, _totalAmount: totalAmount }
-    const result = await createSnapshot(saveName.trim(), snapData)
-    if (result) {
+    const token = useAuthStore.getState().token
+    const res = await fetch(`${BASE}/snapshots`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ name: saveName.trim(), holdings: snapData }),
+    })
+    if (res.ok) {
+      const result = await res.json()
       setSnapshots(prev => [result, ...prev])
       setSaveName('')
     } else {
-      setError('儲存失敗')
+      const text = await res.text().catch(() => '')
+      setError(`儲存失敗 (${res.status}${text ? ': ' + text.slice(0, 200) : ''})`)
     }
   }
 
