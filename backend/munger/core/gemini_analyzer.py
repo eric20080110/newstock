@@ -1,11 +1,23 @@
 import json
+import logging
 
 from munger.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+GEMINI_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-preview-05-06",
+    "gemini-2.5-flash-preview-04-17",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+]
 
 
 def analyze_news_sentiment(articles: list[dict]) -> dict:
     api_key = settings.gemini_api_key
     if not api_key:
+        logger.warning("GEMINI_API_KEY not configured")
         return {"overall_score": 50.0, "headline": "", "key_concerns": [], "key_positives": [], "gemini_limited": True}
 
     news_text = "\n\n".join(
@@ -29,8 +41,21 @@ Today's news:
     try:
         import google.generativeai as genai
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        resp = model.generate_content(prompt)
+
+        last_err = None
+        resp = None
+        for model_name in GEMINI_MODELS:
+            try:
+                model = genai.GenerativeModel(model_name)
+                resp = model.generate_content(prompt)
+                last_err = None
+                break
+            except Exception as e:
+                last_err = e
+                continue
+
+        if resp is None:
+            raise last_err or Exception("all Gemini models failed")
         text = resp.text.strip()
         if text.startswith("```"):
             text = text.split("\n", 1)[-1]
@@ -46,8 +71,10 @@ Today's news:
             "gemini_limited": False,
         }
     except Exception as e:
-        err_str = str(e).lower()
-        is_quota = "quota" in err_str or "rate" in err_str or "resource exhausted" in err_str or "429" in err_str
+        err = str(e)
+        logger.error("Gemini API error: %s", err)
+        err_lower = err.lower()
+        is_quota = "quota" in err_lower or "rate limit" in err_lower or "resource exhausted" in err_lower or "429" in err_lower
         return {
             "overall_score": 50.0,
             "headline": "",
