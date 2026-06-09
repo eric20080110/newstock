@@ -80,8 +80,9 @@ export default function Suggestion() {
       setSnapshots(prev => [result, ...prev])
       setSaveName('')
     } else {
-      const text = await res.text().catch(() => '')
-      setError(`儲存失敗 (${res.status}${text ? ': ' + text.slice(0, 200) : ''})`)
+      const body = await res.json().catch(() => null)
+      const detail = body?.detail || (await res.text().catch(() => ''))
+      setError(`儲存失敗 (${res.status}: ${String(detail).slice(0, 300)})`)
     }
   }
 

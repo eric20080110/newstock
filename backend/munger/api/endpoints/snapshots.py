@@ -1,3 +1,4 @@
+import traceback
 import uuid
 from datetime import datetime
 
@@ -53,26 +54,30 @@ def create_snapshot(
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    profile = db.query(UserProfile).filter(UserProfile.clerk_id == user["sub"]).first()
-    if not profile:
-        profile = UserProfile(clerk_id=user["sub"])
-        db.add(profile)
+    try:
+        profile = db.query(UserProfile).filter(UserProfile.clerk_id == user["sub"]).first()
+        if not profile:
+            profile = UserProfile(clerk_id=user["sub"])
+            db.add(profile)
+            db.commit()
+            db.refresh(profile)
+        snap = PortfolioSnapshot(
+            user_id=profile.id,
+            name=body.name,
+            holdings=body.holdings,
+        )
+        db.add(snap)
         db.commit()
-        db.refresh(profile)
-    snap = PortfolioSnapshot(
-        user_id=profile.id,
-        name=body.name,
-        holdings=body.holdings,
-    )
-    db.add(snap)
-    db.commit()
-    db.refresh(snap)
-    return {
-        "id": str(snap.id),
-        "name": snap.name,
-        "holdings": snap.holdings,
-        "created_at": snap.created_at,
-    }
+        db.refresh(snap)
+        return {
+            "id": str(snap.id),
+            "name": snap.name,
+            "holdings": snap.holdings,
+            "created_at": snap.created_at,
+        }
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/snapshots/{snap_id}")
