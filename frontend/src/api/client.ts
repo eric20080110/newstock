@@ -32,6 +32,21 @@ export interface CurrentHoldings {
   cash: number
 }
 
+export interface DailyReportType {
+  id: string
+  date: string
+  news_score: number
+  cape_score: number
+  yield_curve_score: number
+  vix_score: number
+  total_score: number
+  target_allocation: Record<string, number>
+  headline: string | null
+  key_concerns: string[] | null
+  key_positives: string[] | null
+  created_at: string
+}
+
 export interface AdjustmentStep {
   month: number
   action: string

@@ -11,3 +11,4 @@ yfinance
 fredapi
 apscheduler
 mangum
+google-generativeai

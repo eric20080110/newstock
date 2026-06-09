@@ -3,10 +3,12 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/clerk-react'
 import { useAuthStore } from './store/authStore'
 import Dashboard from './pages/Dashboard'
+import DailyReport from './pages/DailyReport'
 import Suggestion from './pages/Suggestion'
 
 const links = [
   { to: '/', label: '儀表板' },
+  { to: '/daily-report', label: '每日報告' },
   { to: '/suggestion', label: '持倉調整' },
 ]
 
@@ -71,6 +73,7 @@ export default function App() {
       <main className="p-4">
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/daily-report" element={<DailyReport />} />
           <Route path="/suggestion" element={<Suggestion />} />
         </Routes>
       </main>

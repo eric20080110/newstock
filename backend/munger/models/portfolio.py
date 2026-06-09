@@ -1,11 +1,28 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, String, Text
+from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, JSON, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from munger.core.database import Base
+
+
+class DailyReport(Base):
+    __tablename__ = "daily_reports"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    date = Column(Date, nullable=False, unique=True, index=True)
+    news_score = Column(Float, nullable=False)
+    cape_score = Column(Float, nullable=False)
+    yield_curve_score = Column(Float, nullable=False)
+    vix_score = Column(Float, nullable=False)
+    total_score = Column(Float, nullable=False)
+    target_allocation = Column(JSON, nullable=False)
+    headline = Column(Text, nullable=True)
+    key_concerns = Column(JSON, nullable=True)
+    key_positives = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
 class UserProfile(Base):

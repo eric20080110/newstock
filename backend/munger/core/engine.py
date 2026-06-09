@@ -9,6 +9,7 @@ class MarketData:
     vix: float | None
     gold_return_6m: float | None
     oil_return_6m: float | None
+    news_score: float | None = None
 
 
 @dataclass
@@ -56,10 +57,15 @@ def _score_vix(vix: float) -> float:
 
 
 def compute_total_score(data: MarketData) -> float:
-    s_cape = _score_cape(data.cape) * 0.40
-    s_curve = _score_yield_curve(data.treasury_2y, data.treasury_10y) * 0.35
-    s_vix = _score_vix(data.vix) * 0.25
-    return s_cape + s_curve + s_vix
+    s_cape = _score_cape(data.cape)
+    s_curve = _score_yield_curve(data.treasury_2y, data.treasury_10y)
+    s_vix = _score_vix(data.vix)
+    s_news = data.news_score if data.news_score is not None else 50.0
+
+    has_news = data.news_score is not None
+    if has_news:
+        return s_cape * 0.35 + s_curve * 0.30 + s_vix * 0.25 + s_news * 0.10
+    return s_cape * 0.40 + s_curve * 0.35 + s_vix * 0.25
 
 
 def _lerp(low_score, high_score, low_val, high_val, score):

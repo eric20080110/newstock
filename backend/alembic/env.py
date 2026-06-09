@@ -5,7 +5,7 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from munger.core.config import settings
 from munger.core.database import Base
-from munger.models.portfolio import UserProfile, Portfolio, Holding, Suggestion
+from munger.models.portfolio import DailyReport, UserProfile, Portfolio, Holding, Suggestion
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)

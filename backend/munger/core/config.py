@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     clerk_domain: str = ""
     cors_origins: str = "*"
     env: str = "development"
+    newsapi_key: str = ""
+    gemini_api_key: str = ""
+    cron_secret: str = ""
 
     class Config:
         env_file = ".env"

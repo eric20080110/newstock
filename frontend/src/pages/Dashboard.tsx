@@ -1,18 +1,25 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { BASE, type TargetAllocation } from '../api/client'
 import AllocationChart from '../components/AllocationChart'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
 
 export default function Dashboard() {
   const [data, setData] = useState<TargetAllocation | null>(null)
+  const [reportDate, setReportDate] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     const ctrl = new AbortController()
-    fetch(`${BASE}/allocation`, { signal: ctrl.signal })
-      .then((r) => { if (!r.ok) throw new Error('無法取得目標配置'); return r.json() })
-      .then(setData)
+    Promise.all([
+      fetch(`${BASE}/allocation`, { signal: ctrl.signal }).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
+      fetch(`${BASE}/daily-report`, { signal: ctrl.signal }).then((r) => r.ok ? r.json() : null),
+    ])
+      .then(([alloc, report]) => {
+        setData(alloc)
+        setReportDate(report?.date ?? null)
+      })
       .catch((e) => { if (e.name !== 'AbortError') setError(e.message) })
       .finally(() => setLoading(false))
     return () => ctrl.abort()
@@ -36,6 +43,11 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {reportDate && (
+        <div className="text-right text-xs text-gray-400">
+          最後報告：{reportDate}　<Link to="/daily-report" className="text-blue-600 hover:underline">檢視詳情 →</Link>
+        </div>
+      )}
       <Card>
         <CardHeader>蒙格市場溫度計</CardHeader>
         <CardContent>

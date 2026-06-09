@@ -78,6 +78,24 @@ class TransitionSuggestionOut(BaseModel):
     speed: str
 
 
+class DailyReportOut(BaseModel):
+    id: UUID
+    date: str
+    news_score: float
+    cape_score: float
+    yield_curve_score: float
+    vix_score: float
+    total_score: float
+    target_allocation: dict
+    headline: str | None
+    key_concerns: list[str] | None
+    key_positives: list[str] | None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class SuggestionOut(BaseModel):
     id: UUID
     target_allocation: str
