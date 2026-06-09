@@ -123,6 +123,7 @@ export async function fetchTransition(
 ): Promise<TransitionSuggestion> {
   const res = await _fetch(`${BASE}/suggestion/transition?speed=${speed}`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(current),
   })
   if (!res.ok) {

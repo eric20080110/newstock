@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from munger.schemas.portfolio import AssetAllocationOut
+
 
 @dataclass
 class MarketData:
@@ -142,7 +144,7 @@ def _subdivide_commodities(gold_return: float | None, oil_return: float | None, 
     return gold_pct, oil_pct
 
 
-def compute_allocation(data: MarketData) -> AssetAllocation:
+def compute_allocation(data: MarketData) -> AssetAllocationOut:
     total_score = compute_total_score(data)
     eq_pct, fi_pct, cm_pct, ca_pct = _bucket_allocation(total_score)
     spread = None
@@ -152,7 +154,7 @@ def compute_allocation(data: MarketData) -> AssetAllocation:
     gold_pct, oil_pct = _subdivide_commodities(data.gold_return_6m, data.oil_return_6m, cm_pct)
     us_eq = eq_pct * 0.65
     tw_eq = eq_pct * 0.35
-    return AssetAllocation(
+    return AssetAllocationOut(
         taiwan_etf=round(tw_eq, 1),
         us_etf=round(us_eq, 1),
         short_treasury=round(st, 1),

@@ -37,7 +37,7 @@ def get_transition_suggestion(
     db_suggestion = Suggestion(
         user_id=profile.id,
         market_data_snapshot=json.dumps(data, default=str),
-        target_allocation=json.dumps(target.__dict__),
+        target_allocation=json.dumps(target.model_dump()),
         transition_plan=json.dumps([s.model_dump() for s in result.steps]),
     )
     db.add(db_suggestion)

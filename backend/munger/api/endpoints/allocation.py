@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from munger.core.data_fetcher import fetch_all_market_data
 from munger.core.engine import MarketData, compute_allocation, compute_total_score
-from munger.schemas.portfolio import AssetAllocationOut, TargetAllocationOut
+from munger.schemas.portfolio import TargetAllocationOut
 
 router = APIRouter()
 
@@ -15,5 +15,5 @@ def get_allocation():
     score = compute_total_score(md)
     return TargetAllocationOut(
         total_score=round(score, 1),
-        target=AssetAllocationOut(**target.__dict__),
+        target=target,
     )
