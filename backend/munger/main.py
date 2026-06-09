@@ -9,6 +9,11 @@ from munger.core.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if settings.env != "development":
+        from alembic.config import Config as AlembicConfig
+        from alembic import command
+        alembic_cfg = AlembicConfig("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
     yield
 
 
