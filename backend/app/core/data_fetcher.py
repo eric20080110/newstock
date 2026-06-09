@@ -1,12 +1,20 @@
-from fredapi import Fred
+from functools import lru_cache
+
 import yfinance as yf
+from fredapi import Fred
 
 from app.core.config import settings
 
-fred = Fred(api_key=settings.fred_api_key) if settings.fred_api_key else None
+
+@lru_cache(maxsize=1)
+def _get_fred() -> Fred | None:
+    if settings.fred_api_key:
+        return Fred(api_key=settings.fred_api_key)
+    return None
 
 
 def fetch_cape() -> float | None:
+    fred = _get_fred()
     if fred is None:
         return None
     try:
@@ -17,6 +25,7 @@ def fetch_cape() -> float | None:
 
 
 def fetch_gdp_market_cap() -> tuple[float | None, float | None]:
+    fred = _get_fred()
     if fred is None:
         return None, None
     try:
@@ -30,6 +39,7 @@ def fetch_gdp_market_cap() -> tuple[float | None, float | None]:
 
 
 def fetch_treasury_yields() -> dict[str, float | None]:
+    fred = _get_fred()
     if fred is None:
         return {"2y": None, "10y": None}
     try:
@@ -41,6 +51,7 @@ def fetch_treasury_yields() -> dict[str, float | None]:
 
 
 def fetch_effective_fed_rate() -> float | None:
+    fred = _get_fred()
     if fred is None:
         return None
     try:
