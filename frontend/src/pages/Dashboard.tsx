@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchAllocation, type TargetAllocation } from '../api/client'
+import { BASE, type TargetAllocation } from '../api/client'
 import AllocationChart from '../components/AllocationChart'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
 
@@ -9,10 +9,13 @@ export default function Dashboard() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchAllocation()
+    const ctrl = new AbortController()
+    fetch(`${BASE}/allocation`, { signal: ctrl.signal })
+      .then((r) => { if (!r.ok) throw new Error('無法取得目標配置'); return r.json() })
       .then(setData)
-      .catch((e) => setError(e.message))
+      .catch((e) => { if (e.name !== 'AbortError') setError(e.message) })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [])
 
   if (loading) return <div className="text-center py-12 text-gray-400">載入中…</div>
