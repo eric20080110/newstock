@@ -10,6 +10,8 @@ dependencies = [
     "psycopg2-binary",
     "pydantic-settings",
     "httpx",
+    "pyjwt",
+    "cryptography",
     "yfinance",
     "fredapi",
     "apscheduler",
@@ -17,4 +19,4 @@ dependencies = [
 ]
 
 [tool.vercel]
-entrypoint = "munger.main:app"
+entrypoint = "munger/main.py"
