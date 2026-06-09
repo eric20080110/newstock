@@ -32,13 +32,12 @@ export default function Suggestion() {
   const [result, setResult] = useState<TransitionSuggestion | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([])
-  const [snapName, setSnapName] = useState('')
-  const [snapshotKey, setSnapshotKey] = useState(0)
   const reportFetched = useRef(false)
+  const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([])
+  const [saveName, setSaveName] = useState('')
+  const [selectedSnapId, setSelectedSnapId] = useState('')
 
   useEffect(() => {
-    fetchSnapshots().then(setSnapshots)
     if (!reportFetched.current) {
       reportFetched.current = true
       fetch(`${BASE}/daily-report/today`)
@@ -47,6 +46,40 @@ export default function Suggestion() {
         .catch(() => {})
     }
   }, [])
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetchSnapshots().then(setSnapshots).catch(() => {})
+    }
+  }, [isSignedIn])
+
+  const handleLoad = (snapId: string) => {
+    setSelectedSnapId(snapId)
+    const snap = snapshots.find(s => s.id === snapId)
+    if (!snap) return
+    const { _totalAmount, ...pcts } = snap.holdings as Record<string, number>
+    setHoldings(pcts)
+    if (_totalAmount) setTotalAmount(_totalAmount)
+  }
+
+  const handleSave = async () => {
+    if (!isSignedIn || !saveName.trim()) return
+    const snapData = { ...holdings, _totalAmount: totalAmount }
+    const result = await createSnapshot(saveName.trim(), snapData)
+    if (result) {
+      setSnapshots(prev => [result, ...prev])
+      setSaveName('')
+    } else {
+      setError('儲存失敗')
+    }
+  }
+
+  const handleDelete = async (snapId: string) => {
+    if (await deleteSnapshot(snapId)) {
+      setSnapshots(prev => prev.filter(s => s.id !== snapId))
+      if (selectedSnapId === snapId) setSelectedSnapId('')
+    }
+  }
 
   const handleSubmit = async () => {
     if (!isSignedIn) {
@@ -66,44 +99,36 @@ export default function Suggestion() {
     }
   }
 
-  const handleSave = async () => {
-    if (!snapName.trim()) return
-    if (!isSignedIn) {
-      setError('請先登入後才能儲存持倉')
-      return
-    }
-    setError('')
-    const saveData = { ...holdings, totalAmount }
-    const snap = await createSnapshot(snapName.trim(), saveData as Record<string, number>)
-    if (snap) {
-      setSnapshots((prev) => [snap, ...prev])
-      setSnapName('')
-    } else {
-      setError('儲存失敗，請確認已登入')
-    }
-  }
-
-  const loadSnapshot = (s: SnapshotInfo) => {
-    const amt = (s.holdings as any).totalAmount || 0
-    const pcts = { ...s.holdings } as Record<string, number>
-    delete (pcts as any).totalAmount
-    setHoldings(pcts)
-    setTotalAmount(amt)
-    setSnapshotKey(k => k + 1)
-  }
-
-  const handleDelete = async (id: string) => {
-    if (await deleteSnapshot(id)) {
-      setSnapshots((prev) => prev.filter((s) => s.id !== id))
-    }
-  }
-
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <Card>
         <CardHeader>輸入目前持倉</CardHeader>
         <CardContent>
-          <HoldingForm key={snapshotKey} values={holdings} onChange={setHoldings} reference={reference ?? undefined} totalAmount={totalAmount} onTotalAmountChange={setTotalAmount} />
+          {isSignedIn && snapshots.length > 0 && (
+            <div className="flex items-center gap-3 mb-4 pb-4 border-b">
+              <label className="text-sm font-medium text-gray-700">載入儲存方案</label>
+              <select
+                value={selectedSnapId}
+                onChange={(e) => handleLoad(e.target.value)}
+                className="rounded border px-3 py-1 text-sm"
+              >
+                <option value="">-- 選擇方案 --</option>
+                {snapshots.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+              {selectedSnapId && (
+                <button
+                  onClick={() => handleDelete(selectedSnapId)}
+                  className="text-sm text-red-500 hover:text-red-700"
+                >
+                  刪除
+                </button>
+              )}
+            </div>
+          )}
+
+          <HoldingForm values={holdings} onChange={setHoldings} reference={reference ?? undefined} totalAmount={totalAmount} onTotalAmountChange={setTotalAmount} />
           <div className="mt-4 flex items-center gap-4">
             <label className="text-sm font-medium">調整速度：</label>
             <select
@@ -115,6 +140,24 @@ export default function Suggestion() {
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
+            {isSignedIn && (
+              <>
+                <input
+                  type="text"
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  placeholder="方案名稱"
+                  className="rounded border px-3 py-1 text-sm w-40"
+                />
+                <button
+                  onClick={handleSave}
+                  disabled={!saveName.trim()}
+                  className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  儲存方案
+                </button>
+              </>
+            )}
             <button
               onClick={handleSubmit}
               disabled={loading}
@@ -124,30 +167,6 @@ export default function Suggestion() {
             </button>
           </div>
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
-
-          <div className="mt-4 border-t pt-4">
-            <div className="flex items-center gap-2">
-              <input
-                value={snapName}
-                onChange={(e) => setSnapName(e.target.value)}
-                placeholder="儲存目前持倉…"
-                className="rounded border px-3 py-1.5 text-sm flex-1"
-              />
-              <button onClick={handleSave} disabled={!snapName.trim()} className="rounded-lg bg-green-600 px-3 py-1.5 text-xs text-white hover:bg-green-700 disabled:opacity-50">儲存</button>
-            </div>
-            {snapshots.length > 0 ? (
-              <div className="mt-3 space-y-1">
-                {snapshots.map((s) => (
-                  <div key={s.id} className="flex items-center gap-2 rounded bg-gray-50 px-3 py-1.5 text-sm">
-                    <button onClick={() => loadSnapshot(s)} className="flex-1 text-left hover:text-blue-600">{s.name}</button>
-                    <button onClick={() => handleDelete(s.id)} className="text-red-500 hover:text-red-700 text-xs">刪除</button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-3 text-xs text-gray-400">尚未儲存任何持倉</p>
-            )}
-          </div>
         </CardContent>
       </Card>
 

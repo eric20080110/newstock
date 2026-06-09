@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 const FIELDS = [
   { key: 'taiwan_etf', label: '台股 ETF (0050)' },
@@ -40,6 +40,8 @@ export default function HoldingForm({
   onTotalAmountChange?: (v: number) => void
 }) {
   const [amtStrings, setAmtStrings] = useState<Record<string, string>>({})
+  const amtStringsRef = useRef(amtStrings)
+  amtStringsRef.current = amtStrings
 
   const total = Object.values(values).reduce((a, b) => a + b, 0)
 
@@ -58,14 +60,15 @@ export default function HoldingForm({
     setAmtStrings((prev) => ({ ...prev, [key]: raw }))
 
     const num = parseInput(raw)
+    const current = amtStringsRef.current
     const amts: Record<string, number> = {}
 
     for (const f of FIELDS) {
       const k = f.key
       if (k === key) {
         amts[k] = num
-      } else if (amtStrings[k] !== undefined) {
-        amts[k] = parseInput(amtStrings[k])
+      } else if (current[k] !== undefined) {
+        amts[k] = parseInput(current[k])
       } else if (totalAmount > 0) {
         amts[k] = (values[k] / 100) * totalAmount
       } else {
