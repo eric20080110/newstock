@@ -73,13 +73,23 @@ export default function Suggestion() {
       return
     }
     setError('')
-    const snap = await createSnapshot(snapName.trim(), holdings)
+    const saveData = { ...holdings, totalAmount }
+    const snap = await createSnapshot(snapName.trim(), saveData as Record<string, number>)
     if (snap) {
       setSnapshots((prev) => [snap, ...prev])
       setSnapName('')
     } else {
       setError('儲存失敗，請確認已登入')
     }
+  }
+
+  const loadSnapshot = (s: SnapshotInfo) => {
+    const amt = (s.holdings as any).totalAmount || 0
+    const pcts = { ...s.holdings } as Record<string, number>
+    delete (pcts as any).totalAmount
+    setHoldings(pcts)
+    setTotalAmount(amt)
+    setSnapshotKey(k => k + 1)
   }
 
   const handleDelete = async (id: string) => {
@@ -129,7 +139,7 @@ export default function Suggestion() {
               <div className="mt-3 space-y-1">
                 {snapshots.map((s) => (
                   <div key={s.id} className="flex items-center gap-2 rounded bg-gray-50 px-3 py-1.5 text-sm">
-                    <button onClick={() => { setHoldings(s.holdings); setSnapshotKey(k => k + 1) }} className="flex-1 text-left hover:text-blue-600">{s.name}</button>
+                    <button onClick={() => loadSnapshot(s)} className="flex-1 text-left hover:text-blue-600">{s.name}</button>
                     <button onClick={() => handleDelete(s.id)} className="text-red-500 hover:text-red-700 text-xs">刪除</button>
                   </div>
                 ))}
