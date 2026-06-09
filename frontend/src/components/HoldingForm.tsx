@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useState } from 'react'
 
 const FIELDS = [
   { key: 'taiwan_etf', label: '台股 ETF (0050)' },
@@ -17,6 +17,15 @@ function parseInput(v: string): number {
   return isNaN(n) ? 0 : n
 }
 
+function normalizePcts(map: Record<string, number>): Record<string, number> {
+  const total = Object.values(map).reduce((a, b) => a + b, 0)
+  if (Math.abs(total - 100) < 0.01) return map
+  const diff = Math.round((100 - total) * 10) / 10
+  const keys = Object.keys(map)
+  const maxK = keys.reduce((a, b) => map[a] > map[b] ? a : b)
+  return { ...map, [maxK]: Math.round((map[maxK] + diff) * 10) / 10 }
+}
+
 export default function HoldingForm({
   values,
   onChange,
@@ -30,24 +39,56 @@ export default function HoldingForm({
   totalAmount?: number
   onTotalAmountChange?: (v: number) => void
 }) {
+  const [amtStrings, setAmtStrings] = useState<Record<string, string>>({})
+
   const total = Object.values(values).reduce((a, b) => a + b, 0)
 
-  const handleChange = useCallback(
-    (key: string, val: number) => {
-      onChange({ ...values, [key]: Math.max(0, Math.min(100, val)) })
-    },
-    [values, onChange]
-  )
+  const handleSlider = (key: string, val: number) => {
+    const clamped = Math.max(0, Math.min(100, val))
+    onChange({ ...values, [key]: clamped })
+    setAmtStrings((prev) => {
+      if (prev[key] === undefined) return prev
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
+  }
 
-  const handleAmountChange = useCallback(
-    (key: string, amountStr: string) => {
-      const amount = parseInput(amountStr)
-      if (totalAmount <= 0) return
-      const pct = (amount / totalAmount) * 100
-      onChange({ ...values, [key]: Math.max(0, Math.min(100, pct)) })
-    },
-    [totalAmount, values, onChange]
-  )
+  const handleAmountInput = (key: string, raw: string) => {
+    setAmtStrings((prev) => ({ ...prev, [key]: raw }))
+
+    const num = parseInput(raw)
+    const amts: Record<string, number> = {}
+
+    for (const f of FIELDS) {
+      const k = f.key
+      if (k === key) {
+        amts[k] = num
+      } else if (amtStrings[k] !== undefined) {
+        amts[k] = parseInput(amtStrings[k])
+      } else if (totalAmount > 0) {
+        amts[k] = (values[k] / 100) * totalAmount
+      } else {
+        amts[k] = 0
+      }
+    }
+
+    const sum = Object.values(amts).reduce((a, b) => a + b, 0)
+    if (sum > 0) {
+      const pcts: Record<string, number> = {}
+      for (const f of FIELDS) {
+        pcts[f.key] = Math.round(((amts[f.key] || 0) / sum) * 1000) / 10
+      }
+      onChange(normalizePcts(pcts))
+      onTotalAmountChange?.(Math.round(sum))
+    }
+  }
+
+  const displayAmt = (key: string, pct: number): string => {
+    if (amtStrings[key] !== undefined) return amtStrings[key]
+    if (totalAmount > 0) return Math.round((pct / 100) * totalAmount).toLocaleString()
+    return ''
+  }
 
   return (
     <div className="space-y-3">
@@ -59,8 +100,8 @@ export default function HoldingForm({
             inputMode="decimal"
             value={totalAmount > 0 ? totalAmount.toLocaleString() : ''}
             onChange={(e) => onTotalAmountChange(parseInput(e.target.value))}
-            placeholder="0"
-            className="rounded border px-3 py-1.5 text-sm w-40 text-right"
+            placeholder="先輸入總金額或直接在各項輸入金額"
+            className="rounded border px-3 py-1.5 text-sm w-60 text-right text-gray-500"
           />
           <span className="text-sm text-gray-500">元</span>
         </div>
@@ -68,7 +109,6 @@ export default function HoldingForm({
 
       {FIELDS.map(({ key, label }) => {
         const pct = values[key]
-        const amount = totalAmount > 0 ? (pct / 100) * totalAmount : 0
         const refPct = reference?.[key]
 
         return (
@@ -81,7 +121,7 @@ export default function HoldingForm({
                 max={100}
                 step={0.5}
                 value={pct}
-                onChange={(e) => handleChange(key, parseFloat(e.target.value))}
+                onChange={(e) => handleSlider(key, parseFloat(e.target.value))}
                 className="flex-1 accent-blue-600"
               />
               <div className="w-14 text-right text-sm font-medium tabular-nums">{pct.toFixed(1)}%</div>
@@ -90,8 +130,8 @@ export default function HoldingForm({
                   <input
                     type="text"
                     inputMode="decimal"
-                    value={amount > 0 ? Math.round(amount).toLocaleString() : ''}
-                    onChange={(e) => handleAmountChange(key, e.target.value)}
+                    value={displayAmt(key, pct)}
+                    onChange={(e) => handleAmountInput(key, e.target.value)}
                     placeholder="0"
                     className="rounded border px-2 py-1 text-xs w-24 text-right tabular-nums"
                   />
