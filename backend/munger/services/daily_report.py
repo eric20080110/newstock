@@ -39,6 +39,7 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
     total = compute_total_score(md)
 
     gemini_status = sentiment.get("gemini_status", "error")
+    model_used = sentiment.get("model_used")
 
     if existing:
         existing.news_score = sentiment["overall_score"]
@@ -51,6 +52,7 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
         existing.key_concerns = sentiment.get("key_concerns")
         existing.key_positives = sentiment.get("key_positives")
         existing.gemini_status = gemini_status
+        existing.model_used = model_used
         db.commit()
         db.refresh(existing)
         return existing
@@ -67,6 +69,7 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
         key_concerns=sentiment.get("key_concerns"),
         key_positives=sentiment.get("key_positives"),
         gemini_status=gemini_status,
+        model_used=model_used,
     )
     db.add(report)
     db.commit()

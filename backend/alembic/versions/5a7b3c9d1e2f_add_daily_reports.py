@@ -33,6 +33,7 @@ def upgrade() -> None:
         sa.Column("key_concerns", JSON(), nullable=True),
         sa.Column("key_positives", JSON(), nullable=True),
         sa.Column("gemini_status", sa.String(20), nullable=False, server_default="ok"),
+        sa.Column("model_used", sa.String(50), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
     )
 

@@ -23,6 +23,7 @@ class DailyReport(Base):
     key_concerns = Column(JSON, nullable=True)
     key_positives = Column(JSON, nullable=True)
     gemini_status = Column(String(20), default="ok", server_default="ok")
+    model_used = Column(String(50), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 

@@ -73,6 +73,9 @@ export default function DailyReport() {
           {report.headline && (
             <p className="text-sm text-gray-600 mb-3">📌 {report.headline}</p>
           )}
+          {report.model_used && (
+            <p className="text-xs text-gray-400 mb-2">🤖 Gemini 模型：{report.model_used}</p>
+          )}
           <div className="flex items-center justify-between mb-2">
             <span className="text-3xl font-bold">{report.total_score}</span>
             <span className={`text-xl font-bold ${scoreColor}`}>{scoreLabel}</span>

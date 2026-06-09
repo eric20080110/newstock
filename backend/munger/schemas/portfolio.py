@@ -91,6 +91,7 @@ class DailyReportOut(BaseModel):
     key_concerns: list[str] | None
     key_positives: list[str] | None
     gemini_status: str = "ok"
+    model_used: str | None = None
     created_at: datetime
 
     class Config:

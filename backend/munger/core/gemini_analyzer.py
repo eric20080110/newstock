@@ -6,11 +6,11 @@ from munger.core.config import settings
 logger = logging.getLogger(__name__)
 
 GEMINI_MODELS = [
+    "gemini-3.5-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-3-flash",
     "gemini-2.5-flash",
-    "gemini-2.5-flash-preview-05-06",
-    "gemini-2.5-flash-preview-04-17",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
+    "gemini-2.5-flash-tts",
 ]
 
 
@@ -18,7 +18,7 @@ def analyze_news_sentiment(articles: list[dict]) -> dict:
     api_key = settings.gemini_api_key
     if not api_key:
         logger.warning("GEMINI_API_KEY not configured")
-        return {"overall_score": 50.0, "headline": "", "key_concerns": [], "key_positives": [], "gemini_status": "no_key"}
+        return {"overall_score": 50.0, "headline": "", "key_concerns": [], "key_positives": [], "gemini_status": "no_key", "model_used": None}
 
     news_text = "\n\n".join(
         f"Title: {a['title']}\nSummary: {a.get('description', '')}"
@@ -44,10 +44,12 @@ Today's news:
 
         last_err = None
         resp = None
+        model_used = None
         for model_name in GEMINI_MODELS:
             try:
                 model = genai.GenerativeModel(model_name)
                 resp = model.generate_content(prompt)
+                model_used = model_name
                 last_err = None
                 break
             except Exception as e:
@@ -69,6 +71,7 @@ Today's news:
             "key_concerns": result.get("key_concerns", []),
             "key_positives": result.get("key_positives", []),
             "gemini_status": "ok",
+            "model_used": model_used,
         }
     except Exception as e:
         err = str(e)
@@ -82,4 +85,5 @@ Today's news:
             "key_positives": [],
             "gemini_status": "quota" if is_quota else "error",
             "gemini_error": err[:200] if err else None,
+            "model_used": None,
         }

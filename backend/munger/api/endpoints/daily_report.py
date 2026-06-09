@@ -44,6 +44,7 @@ def _compute_report_dict():
         "key_concerns": sentiment.get("key_concerns", []),
         "key_positives": sentiment.get("key_positives", []),
         "gemini_status": sentiment.get("gemini_status", "error"),
+        "model_used": sentiment.get("model_used"),
         "created_at": datetime.utcnow(),
     }
 
