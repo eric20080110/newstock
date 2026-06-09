@@ -4,7 +4,7 @@ import HoldingForm from '../components/HoldingForm'
 import AllocationChart from '../components/AllocationChart'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
 
-const defaultHoldings: CurrentHoldings = {
+const defaultHoldings: Record<string, number> = {
   taiwan_etf: 0,
   us_etf: 0,
   short_treasury: 0,
@@ -23,7 +23,7 @@ const SPEEDS = [
 ]
 
 export default function Suggestion() {
-  const [holdings, setHoldings] = useState<CurrentHoldings>(defaultHoldings)
+  const [holdings, setHoldings] = useState<Record<string, number>>(defaultHoldings)
   const [speed, setSpeed] = useState('standard')
   const [result, setResult] = useState<TransitionSuggestion | null>(null)
   const [loading, setLoading] = useState(false)
@@ -33,7 +33,7 @@ export default function Suggestion() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetchTransition(holdings, speed)
+      const res = await fetchTransition(holdings as unknown as CurrentHoldings, speed)
       setResult(res)
     } catch (e: any) {
       setError(e.message)
@@ -47,7 +47,7 @@ export default function Suggestion() {
       <Card>
         <CardHeader>輸入目前持倉</CardHeader>
         <CardContent>
-          <HoldingForm values={holdings} onChange={(v) => setHoldings(v as CurrentHoldings)} />
+          <HoldingForm values={holdings} onChange={setHoldings} />
           <div className="mt-4 flex items-center gap-4">
             <label className="text-sm font-medium">調整速度：</label>
             <select

@@ -44,7 +44,7 @@ export default function AllocationChart({ data, title }: { data: AssetAllocation
               <Cell key={i} fill={COLORS[i % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
+          <Tooltip formatter={(v: unknown) => `${Number(v).toFixed(1)}%`} />
           <Legend />
         </PieChart>
       </ResponsiveContainer>

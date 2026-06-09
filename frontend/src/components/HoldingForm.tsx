@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Card, CardContent } from './ui/card'
 
 const FIELDS = [
@@ -13,16 +12,12 @@ const FIELDS = [
   { key: 'cash', label: '現金' },
 ]
 
-interface Holdings {
-  [key: string]: number
-}
-
 export default function HoldingForm({
   values,
   onChange,
 }: {
-  values: Holdings
-  onChange: (v: Holdings) => void
+  values: { [key: string]: number }
+  onChange: (v: { [key: string]: number }) => void
 }) {
   const total = Object.values(values).reduce((a, b) => a + b, 0)
 
