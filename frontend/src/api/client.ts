@@ -44,6 +44,7 @@ export interface DailyReportType {
   headline: string | null
   key_concerns: string[] | null
   key_positives: string[] | null
+  gemini_limited: boolean
   created_at: string
 }
 

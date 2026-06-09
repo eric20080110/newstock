@@ -6,7 +6,7 @@ from munger.core.config import settings
 def analyze_news_sentiment(articles: list[dict]) -> dict:
     api_key = settings.gemini_api_key
     if not api_key:
-        return {"overall_score": 50.0, "headline": "", "key_concerns": [], "key_positives": []}
+        return {"overall_score": 50.0, "headline": "", "key_concerns": [], "key_positives": [], "gemini_limited": True}
 
     news_text = "\n\n".join(
         f"Title: {a['title']}\nSummary: {a.get('description', '')}"
@@ -43,6 +43,15 @@ Today's news:
             "headline": result.get("headline", ""),
             "key_concerns": result.get("key_concerns", []),
             "key_positives": result.get("key_positives", []),
+            "gemini_limited": False,
         }
-    except Exception:
-        return {"overall_score": 50.0, "headline": "", "key_concerns": [], "key_positives": []}
+    except Exception as e:
+        err_str = str(e).lower()
+        is_quota = "quota" in err_str or "rate" in err_str or "resource exhausted" in err_str or "429" in err_str
+        return {
+            "overall_score": 50.0,
+            "headline": "",
+            "key_concerns": [],
+            "key_positives": [],
+            "gemini_limited": is_quota,
+        }
