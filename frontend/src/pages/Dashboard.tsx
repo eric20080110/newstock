@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BASE, type TargetAllocation } from '../api/client'
+import { BASE, type TargetAllocation, type DailyReportType } from '../api/client'
 import AllocationChart from '../components/AllocationChart'
+import HistoryChart from '../components/HistoryChart'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
 
 export default function Dashboard() {
   const [data, setData] = useState<TargetAllocation | null>(null)
-  const [reportDate, setReportDate] = useState<string | null>(null)
+  const [report, setReport] = useState<DailyReportType | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -16,9 +17,9 @@ export default function Dashboard() {
       fetch(`${BASE}/allocation`, { signal: ctrl.signal }).then((r) => { if (!r.ok) throw new Error(); return r.json() }),
       fetch(`${BASE}/daily-report`, { signal: ctrl.signal }).then((r) => r.ok ? r.json() : null),
     ])
-      .then(([alloc, report]) => {
+      .then(([alloc, rpt]) => {
         setData(alloc)
-        setReportDate(report?.date ?? null)
+        setReport(rpt)
       })
       .catch((e) => { if (e.name !== 'AbortError') setError(e.message) })
       .finally(() => setLoading(false))
@@ -41,11 +42,18 @@ export default function Dashboard() {
     data.total_score >= 40 ? 'text-yellow-600' :
     data.total_score >= 20 ? 'text-orange-600' : 'text-red-600'
 
+  const isExtreme = data.total_score <= 20 || data.total_score >= 80
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {reportDate && (
+      {isExtreme && (
+        <div className={`rounded-lg px-4 py-3 text-sm font-medium text-white ${data.total_score <= 20 ? 'bg-red-600' : 'bg-green-600'}`}>
+          {data.total_score <= 20 ? '🔴 市場極度恐慌 — 建議謹慎操作，檢視每日報告獲取詳細分析' : '🟢 市場極度貪婪 — 注意高檔風險，檢視每日報告獲取詳細分析'}
+        </div>
+      )}
+      {report?.date && (
         <div className="text-right text-xs text-gray-400">
-          最後報告：{reportDate}　<Link to="/daily-report" className="text-blue-600 hover:underline">檢視詳情 →</Link>
+          最後報告：{report.date}　<Link to="/daily-report" className="text-blue-600 hover:underline">檢視詳情 →</Link>
         </div>
       )}
       <Card>
@@ -67,6 +75,13 @@ export default function Dashboard() {
               }}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>歷史趨勢</CardHeader>
+        <CardContent>
+          <HistoryChart />
         </CardContent>
       </Card>
 

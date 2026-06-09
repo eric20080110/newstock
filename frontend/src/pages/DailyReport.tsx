@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BASE, type DailyReportType, type AssetAllocation } from '../api/client'
 import AllocationChart from '../components/AllocationChart'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
 
 export default function DailyReport() {
+  const printRef = useRef<HTMLDivElement>(null)
   const [report, setReport] = useState<DailyReportType | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -50,13 +51,14 @@ export default function DailyReport() {
     report.total_score >= 20 ? '恐懼' : '極度恐懼'
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6" ref={printRef}>
+      <div className="flex items-center justify-end gap-2 print:hidden">
+        <button onClick={fetchReport} className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700">重新產生</button>
+        <button onClick={() => window.print()} className="rounded-lg bg-gray-600 px-3 py-1 text-xs text-white hover:bg-gray-700">📄 匯出 PDF</button>
+      </div>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <span>📰 {report.date} 每日報告</span>
-            <button onClick={fetchReport} className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700">重新產生</button>
-          </div>
+          <span>📰 {report.date} 每日報告</span>
         </CardHeader>
         <CardContent>
           {report.gemini_status !== "ok" && (

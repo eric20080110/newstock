@@ -1,6 +1,14 @@
+import time
 from functools import lru_cache
 
 from munger.core.config import settings
+
+_cache: dict = {"data": None, "ts": 0.0}
+CACHE_TTL = 3600
+
+
+def _is_cache_valid() -> bool:
+    return _cache["data"] is not None and (time.time() - _cache["ts"]) < CACHE_TTL
 
 
 @lru_cache(maxsize=1)
@@ -66,14 +74,18 @@ def fetch_asset_return_6m(ticker: str) -> float | None:
         return None
 
 
-def fetch_all_market_data() -> dict:
+def fetch_all_market_data(force_refresh: bool = False) -> dict:
+    global _cache
+    if _is_cache_valid() and not force_refresh:
+        return _cache["data"]
+
     cape = fetch_cape()
     yields = fetch_treasury_yields()
     vix = fetch_vix_close()
     gold_return = fetch_asset_return_6m("GLD")
     oil_return = fetch_asset_return_6m("USO")
 
-    return {
+    data = {
         "cape": cape,
         "treasury_2y": yields["2y"],
         "treasury_10y": yields["10y"],
@@ -81,3 +93,5 @@ def fetch_all_market_data() -> dict:
         "gold_return_6m": gold_return,
         "oil_return_6m": oil_return,
     }
+    _cache = {"data": data, "ts": time.time()}
+    return data

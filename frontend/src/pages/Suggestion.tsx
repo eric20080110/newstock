@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { fetchTransition, type CurrentHoldings, type TransitionSuggestion } from '../api/client'
+import { useEffect, useState } from 'react'
+import { fetchTransition, fetchSnapshots, createSnapshot, deleteSnapshot, type CurrentHoldings, type TransitionSuggestion, type SnapshotInfo } from '../api/client'
 import HoldingForm from '../components/HoldingForm'
 import AllocationChart from '../components/AllocationChart'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
@@ -28,6 +28,12 @@ export default function Suggestion() {
   const [result, setResult] = useState<TransitionSuggestion | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([])
+  const [snapName, setSnapName] = useState('')
+
+  useEffect(() => {
+    fetchSnapshots().then(setSnapshots)
+  }, [])
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -39,6 +45,21 @@ export default function Suggestion() {
       setError(e.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!snapName.trim()) return
+    const snap = await createSnapshot(snapName.trim(), holdings)
+    if (snap) {
+      setSnapshots((prev) => [snap, ...prev])
+      setSnapName('')
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (await deleteSnapshot(id)) {
+      setSnapshots((prev) => prev.filter((s) => s.id !== id))
     }
   }
 
@@ -68,6 +89,28 @@ export default function Suggestion() {
             </button>
           </div>
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+
+          <div className="mt-4 border-t pt-4">
+            <div className="flex items-center gap-2">
+              <input
+                value={snapName}
+                onChange={(e) => setSnapName(e.target.value)}
+                placeholder="儲存目前持倉…"
+                className="rounded border px-3 py-1.5 text-sm flex-1"
+              />
+              <button onClick={handleSave} disabled={!snapName.trim()} className="rounded-lg bg-green-600 px-3 py-1.5 text-xs text-white hover:bg-green-700 disabled:opacity-50">儲存</button>
+            </div>
+            {snapshots.length > 0 && (
+              <div className="mt-3 space-y-1">
+                {snapshots.map((s) => (
+                  <div key={s.id} className="flex items-center gap-2 rounded bg-gray-50 px-3 py-1.5 text-sm">
+                    <button onClick={() => setHoldings(s.holdings)} className="flex-1 text-left hover:text-blue-600">{s.name}</button>
+                    <button onClick={() => handleDelete(s.id)} className="text-red-500 hover:text-red-700 text-xs">刪除</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

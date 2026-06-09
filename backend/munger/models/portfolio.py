@@ -65,6 +65,18 @@ class Holding(Base):
     portfolio = relationship("Portfolio", back_populates="holdings")
 
 
+class PortfolioSnapshot(Base):
+    __tablename__ = "portfolio_snapshots"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    holdings = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("UserProfile", backref="snapshots")
+
+
 class Suggestion(Base):
     __tablename__ = "suggestions"
 

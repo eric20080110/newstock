@@ -37,5 +37,16 @@ def upgrade() -> None:
     )
 
 
+    op.create_table(
+        "portfolio_snapshots",
+        sa.Column("id", UUID(as_uuid=True), primary_key=True),
+        sa.Column("user_id", UUID(as_uuid=True), sa.ForeignKey("user_profiles.id"), nullable=False),
+        sa.Column("name", sa.String(100), nullable=False),
+        sa.Column("holdings", JSON(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+    )
+
+
 def downgrade() -> None:
+    op.drop_table("portfolio_snapshots")
     op.drop_table("daily_reports")

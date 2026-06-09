@@ -85,6 +85,34 @@ export async function fetchAllocation(): Promise<TargetAllocation> {
   return res.json()
 }
 
+export interface SnapshotInfo {
+  id: string
+  name: string
+  holdings: Record<string, number>
+  created_at: string
+}
+
+export async function fetchSnapshots(): Promise<SnapshotInfo[]> {
+  const res = await _fetch(`${BASE}/snapshots`)
+  if (!res.ok) return []
+  return res.json()
+}
+
+export async function createSnapshot(name: string, holdings: Record<string, number>): Promise<SnapshotInfo | null> {
+  const res = await _fetch(`${BASE}/snapshots`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, holdings }),
+  })
+  if (!res.ok) return null
+  return res.json()
+}
+
+export async function deleteSnapshot(id: string): Promise<boolean> {
+  const res = await _fetch(`${BASE}/snapshots/${id}`, { method: 'DELETE' })
+  return res.ok
+}
+
 export async function fetchTransition(
   current: CurrentHoldings,
   speed: string = 'standard'
