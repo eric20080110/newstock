@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@clerk/clerk-react'
-import { fetchTransition, fetchSnapshots, createSnapshot, deleteSnapshot, type CurrentHoldings, type TransitionSuggestion, type SnapshotInfo } from '../api/client'
+import { BASE, fetchTransition, fetchSnapshots, createSnapshot, deleteSnapshot, type CurrentHoldings, type TransitionSuggestion, type SnapshotInfo } from '../api/client'
 import HoldingForm from '../components/HoldingForm'
 import AllocationChart from '../components/AllocationChart'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
@@ -26,15 +26,25 @@ const SPEEDS = [
 export default function Suggestion() {
   const { isSignedIn } = useAuth()
   const [holdings, setHoldings] = useState<Record<string, number>>(defaultHoldings)
+  const [reference, setReference] = useState<Record<string, number> | null>(null)
+  const [totalAmount, setTotalAmount] = useState(0)
   const [speed, setSpeed] = useState('standard')
   const [result, setResult] = useState<TransitionSuggestion | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([])
   const [snapName, setSnapName] = useState('')
+  const reportFetched = useRef(false)
 
   useEffect(() => {
     fetchSnapshots().then(setSnapshots)
+    if (!reportFetched.current) {
+      reportFetched.current = true
+      fetch(`${BASE}/daily-report/today`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((r) => { if (r?.target_allocation) setReference(r.target_allocation) })
+        .catch(() => {})
+    }
   }, [])
 
   const handleSubmit = async () => {
@@ -75,7 +85,7 @@ export default function Suggestion() {
       <Card>
         <CardHeader>輸入目前持倉</CardHeader>
         <CardContent>
-          <HoldingForm values={holdings} onChange={setHoldings} />
+          <HoldingForm values={holdings} onChange={setHoldings} reference={reference ?? undefined} totalAmount={totalAmount} onTotalAmountChange={setTotalAmount} />
           <div className="mt-4 flex items-center gap-4">
             <label className="text-sm font-medium">調整速度：</label>
             <select
