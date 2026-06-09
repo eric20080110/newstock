@@ -81,4 +81,5 @@ Today's news:
             "key_concerns": [],
             "key_positives": [],
             "gemini_status": "quota" if is_quota else "error",
+            "gemini_error": err[:200] if err else None,
         }
