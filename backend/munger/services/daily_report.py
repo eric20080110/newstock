@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from munger.core.data_fetcher import fetch_all_market_data
-from munger.core.engine import MarketData, compute_allocation, compute_total_score
+from munger.core.engine import MarketData, compute_allocation, compute_total_score, _score_cape, _score_yield_curve, _score_vix
 from munger.core.gemini_analyzer import analyze_news_sentiment
 from munger.core.news_fetcher import fetch_today_news
 from munger.models.portfolio import DailyReport
@@ -43,9 +43,9 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
 
     if existing:
         existing.news_score = sentiment["overall_score"]
-        existing.cape_score = _safe_score(data["cape"])
-        existing.yield_curve_score = _safe_score(None)
-        existing.vix_score = _safe_score(data["vix"])
+        existing.cape_score = _score_cape(data.get("cape"))
+        existing.yield_curve_score = _score_yield_curve(data.get("treasury_2y"), data.get("treasury_10y"))
+        existing.vix_score = _score_vix(data.get("vix"))
         existing.total_score = round(total, 1)
         existing.target_allocation = target.__dict__
         existing.headline = sentiment.get("headline")
@@ -60,9 +60,9 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
     report = DailyReport(
         date=today,
         news_score=sentiment["overall_score"],
-        cape_score=_safe_score(data["cape"]),
-        yield_curve_score=_safe_score(None),
-        vix_score=_safe_score(data["vix"]),
+        cape_score=_score_cape(data.get("cape")),
+        yield_curve_score=_score_yield_curve(data.get("treasury_2y"), data.get("treasury_10y")),
+        vix_score=_score_vix(data.get("vix")),
         total_score=round(total, 1),
         target_allocation=target.__dict__,
         headline=sentiment.get("headline"),

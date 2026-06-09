@@ -5,7 +5,7 @@ from munger.core.auth import get_current_user
 from munger.core.config import settings
 from munger.core.database import get_db
 from munger.core.data_fetcher import fetch_all_market_data
-from munger.core.engine import MarketData, compute_allocation, compute_total_score
+from munger.core.engine import MarketData, compute_allocation, compute_total_score, _score_cape, _score_yield_curve, _score_vix
 from munger.core.gemini_analyzer import analyze_news_sentiment
 from munger.core.news_fetcher import fetch_today_news
 from munger.schemas.portfolio import DailyReportOut
@@ -35,9 +35,9 @@ def _compute_report_dict():
         "id": uuid.uuid4(),
         "date": datetime.utcnow().date().isoformat(),
         "news_score": sentiment.get("overall_score", 50.0),
-        "cape_score": data.get("cape") or 50.0,
-        "yield_curve_score": 50.0,
-        "vix_score": data.get("vix") or 50.0,
+        "cape_score": _score_cape(data.get("cape")),
+        "yield_curve_score": _score_yield_curve(data.get("treasury_2y"), data.get("treasury_10y")),
+        "vix_score": _score_vix(data.get("vix")),
         "total_score": round(total, 1),
         "target_allocation": target.__dict__,
         "headline": sentiment.get("headline", ""),
