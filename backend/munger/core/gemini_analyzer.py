@@ -29,7 +29,7 @@ Today's news:
     try:
         import google.generativeai as genai
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         resp = model.generate_content(prompt)
         text = resp.text.strip()
         if text.startswith("```"):
