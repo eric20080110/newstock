@@ -59,7 +59,7 @@ def get_report(db: Session = Depends(get_db)):
 @router.get("/daily-report/today", response_model=DailyReportOut)
 def get_or_generate_today(db: Session = Depends(get_db)):
     try:
-        return generate_daily_report(db)
+        return generate_daily_report(db, force=True)
     except Exception:
         return _compute_report_dict()
 
@@ -78,8 +78,15 @@ def get_history(limit: int = Query(30), db: Session = Depends(get_db)):
     return get_report_history(db, limit=limit)
 
 
+@router.get("/daily-report/debug-gemini")
+def debug_gemini():
+    articles = fetch_today_news()
+    result = analyze_news_sentiment(articles)
+    return {"articles_count": len(articles), "gemini_result": result}
+
+
 @router.get("/cron/daily-report", response_model=DailyReportOut)
 def cron_trigger(token: str = Query(...), db: Session = Depends(get_db)):
     if not settings.cron_secret or token != settings.cron_secret:
         raise HTTPException(status_code=403, detail="Invalid cron token")
-    return generate_daily_report(db)
+    return generate_daily_report(db, force=True)

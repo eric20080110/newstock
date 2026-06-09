@@ -17,6 +17,12 @@ def generate_daily_report(db: Session, force: bool = False) -> DailyReport:
     if existing and not force:
         return existing
 
+    try:
+        db.query(DailyReport).filter(DailyReport.date == today).delete()
+        db.commit()
+    except Exception:
+        db.rollback()
+
     articles = fetch_today_news()
     sentiment = analyze_news_sentiment(articles)
     data = fetch_all_market_data()
