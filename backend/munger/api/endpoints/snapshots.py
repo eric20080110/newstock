@@ -36,7 +36,15 @@ def list_snapshots(
     if not profile:
         return []
     snapshots = db.query(PortfolioSnapshot).filter(PortfolioSnapshot.user_id == profile.id).order_by(PortfolioSnapshot.created_at.desc()).all()
-    return snapshots
+    return [
+        {
+            "id": str(s.id),
+            "name": s.name,
+            "holdings": s.holdings,
+            "created_at": s.created_at,
+        }
+        for s in snapshots
+    ]
 
 
 @router.post("/snapshots", response_model=SnapshotOut)
@@ -59,7 +67,12 @@ def create_snapshot(
     db.add(snap)
     db.commit()
     db.refresh(snap)
-    return snap
+    return {
+        "id": str(snap.id),
+        "name": snap.name,
+        "holdings": snap.holdings,
+        "created_at": snap.created_at,
+    }
 
 
 @router.delete("/snapshots/{snap_id}")
