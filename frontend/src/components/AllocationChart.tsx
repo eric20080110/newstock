@@ -29,7 +29,7 @@ export default function AllocationChart({ data, title }: { data: AssetAllocation
   return (
     <div>
       {title && <h3 className="text-center text-sm font-medium text-gray-500 mb-2">{title}</h3>}
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={260}>
         <PieChart>
           <Pie
             data={chartData}

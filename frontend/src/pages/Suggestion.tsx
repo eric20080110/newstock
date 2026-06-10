@@ -133,12 +133,12 @@ export default function Suggestion() {
         <CardHeader>輸入目前持倉</CardHeader>
         <CardContent>
           {isSignedIn && snapshots.length > 0 && (
-            <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-              <label className="text-sm font-medium text-gray-700">載入儲存方案</label>
+            <div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">載入儲存方案</label>
               <select
                 value={selectedSnapId}
                 onChange={(e) => handleLoad(e.target.value)}
-                className="rounded border px-3 py-1 text-sm"
+                className="rounded border px-3 py-1 text-sm flex-1 min-w-0"
               >
                 <option value="">-- 選擇方案 --</option>
                 {snapshots.map(s => (
@@ -148,7 +148,7 @@ export default function Suggestion() {
               {selectedSnapId && (
                 <button
                   onClick={() => handleDelete(selectedSnapId)}
-                  className="text-sm text-red-500 hover:text-red-700"
+                  className="text-sm text-red-500 hover:text-red-700 whitespace-nowrap"
                 >
                   刪除
                 </button>
@@ -157,25 +157,34 @@ export default function Suggestion() {
           )}
 
           <HoldingForm values={holdings} onChange={setHoldings} reference={reference ?? undefined} totalAmount={totalAmount} onTotalAmountChange={setTotalAmount} />
-          <div className="mt-4 flex items-center gap-4">
-            <label className="text-sm font-medium">調整速度：</label>
-            <select
-              value={speed}
-              onChange={(e) => setSpeed(e.target.value)}
-              className="rounded border px-3 py-1 text-sm"
-            >
-              {SPEEDS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
+          <div className="mt-4 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-sm font-medium whitespace-nowrap">調整速度：</label>
+              <select
+                value={speed}
+                onChange={(e) => setSpeed(e.target.value)}
+                className="rounded border px-3 py-1 text-sm"
+              >
+                {SPEEDS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="ml-auto w-full sm:w-auto rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading ? '計算中…' : '產生轉換建議'}
+              </button>
+            </div>
             {isSignedIn && (
-              <>
+              <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="text"
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
                   placeholder="方案名稱"
-                  className="rounded border px-3 py-1 text-sm w-40"
+                  className="rounded border px-3 py-1 text-sm flex-1 min-w-[120px]"
                 />
                 <button
                   onClick={handleSave}
@@ -184,15 +193,8 @@ export default function Suggestion() {
                 >
                   儲存方案
                 </button>
-              </>
+              </div>
             )}
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="ml-auto rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? '計算中…' : '產生轉換建議'}
-            </button>
           </div>
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </CardContent>

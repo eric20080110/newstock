@@ -96,17 +96,17 @@ export default function HoldingForm({
   return (
     <div className="space-y-3">
       {onTotalAmountChange && (
-        <div className="flex items-center gap-3 pb-2 border-b">
-          <label className="w-40 text-sm font-medium text-gray-700">總金額</label>
+        <div className="flex flex-wrap items-center gap-2 pb-2 border-b">
+          <label className="text-sm font-medium text-gray-700 min-w-[4rem]">總金額</label>
           <input
             type="text"
             inputMode="decimal"
             value={totalAmount > 0 ? totalAmount.toLocaleString() : ''}
             onChange={(e) => onTotalAmountChange(parseInput(e.target.value))}
-            placeholder="先輸入總金額或直接在各項輸入金額"
-            className="rounded border px-3 py-1.5 text-sm w-60 text-right text-gray-500"
+            placeholder="金額"
+            className="rounded border px-3 py-1.5 text-sm flex-1 min-w-[120px] text-right text-gray-500"
           />
-          <span className="text-sm text-gray-500">元</span>
+          <span className="text-sm text-gray-500 whitespace-nowrap">元</span>
         </div>
       )}
 
@@ -116,41 +116,60 @@ export default function HoldingForm({
 
         return (
           <div key={key}>
-            <div className="flex items-center gap-3">
-              <label className="w-40 text-sm font-medium text-gray-700 truncate" title={label}>{label}</label>
-              <div className="relative flex-1 h-6">
-                <div className="absolute inset-0 top-1/2 -translate-y-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+              <div className="flex items-center justify-between sm:w-40">
+                <label className="text-sm font-medium text-gray-700 truncate" title={label}>{label}</label>
+                <div className="flex items-center gap-1 sm:hidden">
+                  {onTotalAmountChange && (
+                    <>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={displayAmt(key, pct)}
+                        onChange={(e) => handleAmountInput(key, e.target.value)}
+                        placeholder="0"
+                        className="rounded border px-1.5 py-0.5 text-xs w-20 text-right tabular-nums"
+                      />
+                      <span className="text-xs text-gray-400">元</span>
+                    </>
+                  )}
                 </div>
-                {refPct !== undefined && (
-                  <div className="absolute top-0 w-0.5 bg-red-400 rounded-full" style={{ left: `${refPct}%`, height: '100%', transform: 'translateX(-50%)' }} />
-                )}
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={0.5}
-                  value={pct}
-                  onChange={(e) => handleSlider(key, parseFloat(e.target.value))}
-                  className="absolute inset-0 w-full cursor-pointer opacity-0 z-10"
-                />
               </div>
-              <div className="w-14 text-right text-sm font-medium tabular-nums">{pct.toFixed(1)}%</div>
-              {onTotalAmountChange && (
-                <>
+              <div className="flex items-center gap-2 flex-1">
+                <div className="relative flex-1 h-6 min-w-0">
+                  <div className="absolute inset-0 top-1/2 -translate-y-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                  {refPct !== undefined && (
+                    <div className="absolute top-0 w-0.5 bg-red-400 rounded-full" style={{ left: `${refPct}%`, height: '100%', transform: 'translateX(-50%)' }} />
+                  )}
                   <input
-                    type="text"
-                    inputMode="decimal"
-                    value={displayAmt(key, pct)}
-                    onChange={(e) => handleAmountInput(key, e.target.value)}
-                    placeholder="0"
-                    className="rounded border px-2 py-1 text-xs w-24 text-right tabular-nums"
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={0.5}
+                    value={pct}
+                    onChange={(e) => handleSlider(key, parseFloat(e.target.value))}
+                    className="absolute inset-0 w-full cursor-pointer opacity-0 z-10"
                   />
-                  <span className="text-xs text-gray-400 w-6">元</span>
-                </>
-              )}
+                </div>
+                <div className="w-14 text-right text-sm font-medium tabular-nums shrink-0">{pct.toFixed(1)}%</div>
+                {onTotalAmountChange && (
+                  <div className="hidden sm:flex items-center gap-1">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={displayAmt(key, pct)}
+                      onChange={(e) => handleAmountInput(key, e.target.value)}
+                      placeholder="0"
+                      className="rounded border px-2 py-1 text-xs w-24 text-right tabular-nums"
+                    />
+                    <span className="text-xs text-gray-400 w-6">元</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-3 pl-40">
+            <div className="flex items-center gap-3 sm:pl-40 mt-0.5">
               {refPct !== undefined && (
                 <span className="text-xs text-gray-400">
                   目標 {refPct.toFixed(1)}%
