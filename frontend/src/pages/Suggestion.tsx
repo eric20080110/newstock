@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@clerk/clerk-react'
-import { BASE, fetchTransition, fetchSnapshots, deleteSnapshot, type CurrentHoldings, type TransitionSuggestion, type SnapshotInfo } from '../api/client'
-import { useAuthStore } from '../store/authStore'
+import { BASE, fetchSnapshots, type TransitionSuggestion, type SnapshotInfo } from '../api/client'
+
 import HoldingForm from '../components/HoldingForm'
 import AllocationChart from '../components/AllocationChart'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
@@ -25,7 +25,7 @@ const SPEEDS = [
 ]
 
 export default function Suggestion() {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, getToken } = useAuth()
   const [holdings, setHoldings] = useState<Record<string, number>>(defaultHoldings)
   const [reference, setReference] = useState<Record<string, number> | null>(null)
   const [totalAmount, setTotalAmount] = useState(0)
@@ -66,12 +66,13 @@ export default function Suggestion() {
   const handleSave = async () => {
     if (!isSignedIn || !saveName.trim()) return
     const snapData = { ...holdings, _totalAmount: totalAmount }
-    const token = useAuthStore.getState().token
+    const token = await getToken()
+    if (!token) { setError('無法取得授權，請重新登入'); return }
     const res = await fetch(`${BASE}/snapshots`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({ name: saveName.trim(), holdings: snapData }),
     })
@@ -87,7 +88,13 @@ export default function Suggestion() {
   }
 
   const handleDelete = async (snapId: string) => {
-    if (await deleteSnapshot(snapId)) {
+    const token = await getToken()
+    if (!token) { setError('無法取得授權，請重新登入'); return }
+    const res = await fetch(`${BASE}/snapshots/${snapId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+    if (res.ok) {
       setSnapshots(prev => prev.filter(s => s.id !== snapId))
       if (selectedSnapId === snapId) setSelectedSnapId('')
     }
@@ -101,8 +108,17 @@ export default function Suggestion() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetchTransition(holdings as unknown as CurrentHoldings, speed)
-      setResult(res)
+      const token = await getToken()
+      const res = await fetch(`${BASE}/suggestion/transition?speed=${speed}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(holdings),
+      })
+      if (!res.ok) throw new Error(`請求失敗 (${res.status})`)
+      setResult(await res.json())
     } catch (e: any) {
       setError(e.message || '網路錯誤，請確認後端服務正常')
       console.error('Suggestion error:', e)
