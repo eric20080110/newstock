@@ -138,9 +138,9 @@ export default function HoldingForm({
               <div className="flex items-center gap-2 flex-1">
                 <div className="relative flex-1 h-6 min-w-0">
                   <div className="absolute inset-0 top-1/2 -translate-y-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${pct ?? 0}%` }} />
                   </div>
-                  {refPct !== undefined && (
+                  {refPct != null && (
                     <div className="absolute top-0 w-0.5 bg-red-400 rounded-full" style={{ left: `${refPct}%`, height: '100%', transform: 'translateX(-50%)' }} />
                   )}
                   <input
@@ -153,7 +153,7 @@ export default function HoldingForm({
                     className="absolute inset-0 w-full cursor-pointer opacity-0 z-10"
                   />
                 </div>
-                <div className="w-14 text-right text-sm font-medium tabular-nums shrink-0">{pct.toFixed(1)}%</div>
+                <div className="w-14 text-right text-sm font-medium tabular-nums shrink-0">{(pct ?? 0).toFixed(1)}%</div>
                 {onTotalAmountChange && (
                   <div className="hidden sm:flex items-center gap-1">
                     <input
@@ -170,7 +170,7 @@ export default function HoldingForm({
               </div>
             </div>
             <div className="flex items-center gap-3 sm:pl-40 mt-0.5">
-              {refPct !== undefined && (
+              {refPct != null && (
                 <span className="text-xs text-gray-400">
                   目標 {refPct.toFixed(1)}%
                 </span>
