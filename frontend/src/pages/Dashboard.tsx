@@ -94,7 +94,7 @@ export default function Dashboard() {
             {Object.entries(data.target).map(([key, val]) => (
               <div key={key} className="flex justify-between px-2 py-1 bg-gray-50 rounded">
                 <span className="text-gray-500">{key}</span>
-                <span className="font-medium">{val.toFixed(1)}%</span>
+                <span className="font-medium">{(val ?? 0).toFixed(1)}%</span>
               </div>
             ))}
           </div>

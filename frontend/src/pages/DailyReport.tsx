@@ -97,7 +97,7 @@ export default function DailyReport() {
             ].map((f) => (
               <div key={f.label} className="rounded bg-gray-50 p-2 text-center">
                 <div className="text-gray-400 text-xs">{f.label}</div>
-                <div className="font-bold text-lg">{f.value.toFixed(0)}</div>
+                <div className="font-bold text-lg">{(f.value ?? 0).toFixed(0)}</div>
               </div>
             ))}
           </div>
