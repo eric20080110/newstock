@@ -33,7 +33,7 @@ function Nav() {
     <nav className="border-b bg-white sticky top-0 z-10">
       <div className="max-w-5xl mx-auto flex items-center justify-between h-14 px-4">
         <Link to="/" className="font-bold text-lg text-gray-800">
-          🧠 蒙格投資組合
+          🧠 蒙格投資心法
         </Link>
         <div className="flex items-center gap-3">
           <SignedIn>
