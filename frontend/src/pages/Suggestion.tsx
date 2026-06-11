@@ -66,38 +66,45 @@ export default function Suggestion() {
   const handleSave = async () => {
     if (!isSignedIn || !saveName.trim()) return
     const snapData = { ...holdings, _totalAmount: totalAmount }
-    const token = await getToken()
-    if (!token) { setError('無法取得授權，請重新登入'); return }
-    const res = await fetch(`${BASE}/snapshots`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ name: saveName.trim(), holdings: snapData }),
-    })
-    if (res.ok) {
-      const result = await res.json()
+    const doFetch = async (retried = false) => {
+      const token = await getToken()
+      if (!token) throw new Error('無法取得授權，請重新登入')
+      const res = await fetch(`${BASE}/snapshots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: saveName.trim(), holdings: snapData }),
+      })
+      if (res.ok) return res.json()
+      if (res.status === 401 && !retried) return doFetch(true)
+      const body = await res.json().catch(() => null)
+      throw new Error(body?.detail || `儲存失敗 (${res.status})`)
+    }
+    try {
+      const result = await doFetch()
       setSnapshots(prev => [result, ...prev])
       setSaveName('')
-    } else {
-      const body = await res.json().catch(() => null)
-      const detail = body?.detail || (await res.text().catch(() => ''))
-      setError(`儲存失敗 (${res.status}: ${String(detail).slice(0, 300)})`)
+    } catch (e: any) {
+      setError(e.message)
     }
   }
 
   const handleDelete = async (snapId: string) => {
-    const token = await getToken()
-    if (!token) { setError('無法取得授權，請重新登入'); return }
-    const res = await fetch(`${BASE}/snapshots/${snapId}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` },
-    })
-    if (res.ok) {
+    const doFetch = async (retried = false) => {
+      const token = await getToken()
+      if (!token) throw new Error('無法取得授權，請重新登入')
+      const res = await fetch(`${BASE}/snapshots/${snapId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) return
+      if (res.status === 401 && !retried) return doFetch(true)
+      throw new Error('刪除失敗')
+    }
+    try {
+      await doFetch()
       setSnapshots(prev => prev.filter(s => s.id !== snapId))
       if (selectedSnapId === snapId) setSelectedSnapId('')
-    }
+    } catch {}
   }
 
   const handleSubmit = async () => {
@@ -107,18 +114,23 @@ export default function Suggestion() {
     }
     setLoading(true)
     setError('')
-    try {
+    const doFetch = async (retried = false) => {
       const token = await getToken()
+      if (!token) throw new Error('無法取得授權，請重新登入')
       const res = await fetch(`${BASE}/suggestion/transition?speed=${speed}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(holdings),
       })
-      if (!res.ok) throw new Error(`請求失敗 (${res.status})`)
-      setResult(await res.json())
+      if (!res.ok) {
+        if (res.status === 401 && !retried) return doFetch(true)
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.detail || `請求失敗 (${res.status})`)
+      }
+      return res.json()
+    }
+    try {
+      setResult(await doFetch())
     } catch (e: any) {
       setError(e.message || '網路錯誤，請確認後端服務正常')
       console.error('Suggestion error:', e)
