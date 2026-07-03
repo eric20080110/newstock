@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAuth } from '@clerk/clerk-react'
 import { BASE } from '../api/client'
 import { Card, CardContent, CardHeader } from '../components/ui/card'
@@ -10,6 +10,7 @@ interface StockRow {
   shares: string
   avgCost: string
   currentPrice: string
+  loading: boolean
 }
 
 interface AnalysisResult {
@@ -27,7 +28,7 @@ interface AnalysisResult {
 let nextId = 1
 
 function emptyRow(): StockRow {
-  return { id: nextId++, ticker: '', name: '', shares: '', avgCost: '', currentPrice: '' }
+  return { id: nextId++, ticker: '', name: '', shares: '', avgCost: '', currentPrice: '', loading: false }
 }
 
 const RISK_COLORS: Record<string, string> = {
@@ -44,14 +45,40 @@ export default function PortfolioAnalysis() {
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const debounceTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({})
 
-  const updateRow = (id: number, field: keyof StockRow, value: string) => {
+  const updateRow = (id: number, field: keyof StockRow, value: any) => {
     setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
+  }
+
+  const lookupStock = async (id: number, ticker: string) => {
+    if (ticker.length < 2) return
+    updateRow(id, 'loading', true)
+    try {
+      const token = await getToken()
+      const res = await fetch(`${BASE}/stock/info?ticker=${encodeURIComponent(ticker)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setRows(prev => prev.map(r =>
+        r.id === id ? { ...r, name: data.name || r.name, currentPrice: String(data.price), loading: false } : r
+      ))
+    } catch {
+      updateRow(id, 'loading', false)
+    }
+  }
+
+  const handleTickerChange = (id: number, value: string) => {
+    updateRow(id, 'ticker', value)
+    if (debounceTimers.current[id]) clearTimeout(debounceTimers.current[id])
+    debounceTimers.current[id] = setTimeout(() => lookupStock(id, value.trim()), 400)
   }
 
   const addRow = () => setRows(prev => [...prev, emptyRow()])
 
   const removeRow = (id: number) => {
+    if (debounceTimers.current[id]) clearTimeout(debounceTimers.current[id])
     setRows(prev => prev.length > 1 ? prev.filter(r => r.id !== id) : prev)
   }
 
@@ -102,14 +129,14 @@ export default function PortfolioAnalysis() {
       <Card>
         <CardHeader>AI 投資組合分析</CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-500 mb-4">輸入您的股票持股，AI 將分析風險、分散程度並提供建議</p>
+          <p className="text-sm text-gray-500 mb-4">輸入股票代碼後自動帶入名稱與現價（台股請輸入數字代碼，如 2330）</p>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-gray-500">
                   <th className="pb-2 pr-2 min-w-[100px]">代號</th>
-                  <th className="pb-2 pr-2 min-w-[120px]">名稱</th>
+                  <th className="pb-2 pr-2 min-w-[130px]">名稱</th>
                   <th className="pb-2 pr-2 min-w-[80px] text-right">股數</th>
                   <th className="pb-2 pr-2 min-w-[100px] text-right">平均成本</th>
                   <th className="pb-2 pr-2 min-w-[100px] text-right">現價</th>
@@ -125,19 +152,45 @@ export default function PortfolioAnalysis() {
                   return (
                     <tr key={row.id} className="border-b border-gray-100">
                       <td className="py-2 pr-2">
-                        <input value={row.ticker} onChange={(e) => updateRow(row.id, 'ticker', e.target.value)} placeholder="AAPL" className="w-full rounded border px-2 py-1 text-sm" />
+                        <input
+                          value={row.ticker}
+                          onChange={(e) => handleTickerChange(row.id, e.target.value)}
+                          placeholder="2330"
+                          className="w-full rounded border px-2 py-1 text-sm"
+                        />
+                      </td>
+                      <td className="py-2 pr-2 relative">
+                        <input
+                          value={row.name}
+                          onChange={(e) => updateRow(row.id, 'name', e.target.value)}
+                          placeholder="台積電"
+                          className="w-full rounded border px-2 py-1 text-sm"
+                        />
+                        {row.loading && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">查詢中…</span>
+                        )}
                       </td>
                       <td className="py-2 pr-2">
-                        <input value={row.name} onChange={(e) => updateRow(row.id, 'name', e.target.value)} placeholder="Apple" className="w-full rounded border px-2 py-1 text-sm" />
-                      </td>
-                      <td className="py-2 pr-2">
-                        <input type="text" inputMode="numeric" value={row.shares} onChange={(e) => updateRow(row.id, 'shares', e.target.value)} placeholder="100" className="w-full rounded border px-2 py-1 text-sm text-right" />
+                        <input type="text" inputMode="numeric" value={row.shares} onChange={(e) => updateRow(row.id, 'shares', e.target.value)} placeholder="1000" className="w-full rounded border px-2 py-1 text-sm text-right" />
                       </td>
                       <td className="py-2 pr-2">
                         <input type="text" inputMode="decimal" value={row.avgCost} onChange={(e) => updateRow(row.id, 'avgCost', e.target.value)} placeholder="150.00" className="w-full rounded border px-2 py-1 text-sm text-right" />
                       </td>
-                      <td className="py-2 pr-2">
-                        <input type="text" inputMode="decimal" value={row.currentPrice} onChange={(e) => updateRow(row.id, 'currentPrice', e.target.value)} placeholder="180.00" className="w-full rounded border px-2 py-1 text-sm text-right" />
+                      <td className="py-2 pr-2 relative">
+                        <input
+                          type="text" inputMode="decimal"
+                          value={row.currentPrice}
+                          onChange={(e) => updateRow(row.id, 'currentPrice', e.target.value)}
+                          placeholder="自動帶入"
+                          className="w-full rounded border px-2 py-1 text-sm text-right"
+                        />
+                        {!row.loading && row.ticker.trim().length >= 2 && (
+                          <button
+                            onClick={() => lookupStock(row.id, row.ticker.trim())}
+                            className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-blue-500 hover:text-blue-700"
+                            title="重新查詢"
+                          >↻</button>
+                        )}
                       </td>
                       <td className="py-2 pr-2 text-right text-sm text-gray-600 tabular-nums">{value > 0 ? value.toLocaleString() : ''}</td>
                       <td className="py-2">
@@ -165,60 +218,58 @@ export default function PortfolioAnalysis() {
       </Card>
 
       {result && result.status === 'ok' && (
-        <>
-          <Card>
-            <CardHeader>分析結果</CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-500">風險等級：</span>
-                <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${RISK_COLORS[result.risk_level] || 'bg-gray-100 text-gray-600'}`}>
-                  {result.risk_level}
-                </span>
-                <span className="text-sm text-gray-400">
-                  分散程度：{result.diversification_score}/100
-                </span>
+        <Card>
+          <CardHeader>分析結果</CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-500">風險等級：</span>
+              <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${RISK_COLORS[result.risk_level] || 'bg-gray-100 text-gray-600'}`}>
+                {result.risk_level}
+              </span>
+              <span className="text-sm text-gray-400">
+                分散程度：{result.diversification_score}/100
+              </span>
+            </div>
+
+            <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed">
+              {result.summary}
+            </div>
+
+            {result.sector_concentration && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-1">產業分布</h4>
+                <p className="text-sm text-gray-700">{result.sector_concentration}</p>
               </div>
+            )}
 
-              <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed">
-                {result.summary}
+            {result.strengths.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-green-700 mb-1">✅ 優勢</h4>
+                <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                  {result.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                </ul>
               </div>
+            )}
 
-              {result.sector_concentration && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-1">產業分布</h4>
-                  <p className="text-sm text-gray-700">{result.sector_concentration}</p>
-                </div>
-              )}
+            {result.concerns.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-red-600 mb-1">⚠️ 風險與隱憂</h4>
+                <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                  {result.concerns.map((c, i) => <li key={i}>{c}</li>)}
+                </ul>
+              </div>
+            )}
 
-              {result.strengths.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-green-700 mb-1">✅ 優勢</h4>
-                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    {result.strengths.map((s, i) => <li key={i}>{s}</li>)}
-                  </ul>
-                </div>
-              )}
-
-              {result.concerns.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-red-600 mb-1">⚠️ 風險與隱憂</h4>
-                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    {result.concerns.map((c, i) => <li key={i}>{c}</li>)}
-                  </ul>
-                </div>
-              )}
-
-              {result.suggestions.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-blue-700 mb-1">💡 建議</h4>
-                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    {result.suggestions.map((s, i) => <li key={i}>{s}</li>)}
-                  </ul>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </>
+            {result.suggestions.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-blue-700 mb-1">💡 建議</h4>
+                <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                  {result.suggestions.map((s, i) => <li key={i}>{s}</li>)}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {result && result.status === 'error' && (
