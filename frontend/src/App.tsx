@@ -5,11 +5,13 @@ import { useAuthStore } from './store/authStore'
 import Dashboard from './pages/Dashboard'
 import DailyReport from './pages/DailyReport'
 import Suggestion from './pages/Suggestion'
+import PortfolioAnalysis from './pages/PortfolioAnalysis'
 
 const links = [
   { to: '/', label: '儀表板' },
   { to: '/daily-report', label: '每日報告' },
   { to: '/suggestion', label: '持倉調整' },
+  { to: '/portfolio-analysis', label: 'AI 分析' },
 ]
 
 function AuthSync() {
@@ -75,6 +77,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/daily-report" element={<DailyReport />} />
           <Route path="/suggestion" element={<Suggestion />} />
+          <Route path="/portfolio-analysis" element={<PortfolioAnalysis />} />
         </Routes>
       </main>
     </BrowserRouter>
